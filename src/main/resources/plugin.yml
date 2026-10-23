@@ -1,0 +1,14 @@
+name: SHCookieClicker
+version: ${project.version}
+main: de.zillolp.cookieclicker.CookieClicker
+api-version: '26.3'
+load: POSTWORLD
+description: "Version SkyHand de CookieClicker par ZilloLP (licence CookieClicker 1.0, voir LICENSE) : NMS remplacé par l'API Paper."
+authors: [ZilloLP, Cry_Legende]
+website: https://github.com/ZilloLP/CookieClicker
+commands:
+  cookieclicker:
+    description: Manage CookieClicker
+softdepend:
+  - "Multiverse-Core"
+  - "PlaceholderAPI"
