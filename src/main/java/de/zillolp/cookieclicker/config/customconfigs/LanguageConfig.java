@@ -38,7 +38,9 @@ public class LanguageConfig extends CustomConfig {
         if (!(fileConfiguration.contains(keyName))) {
             return keyName;
         }
-        String language = replaceColorCodes(fileConfiguration.getString(keyName, "N/A"));
+        // getString(clé, défaut) rendrait le défaut sans regarder le language.yml du jar : la valeur du jar passe avant « N/A »
+        String raw = fileConfiguration.getString(keyName);
+        String language = replaceColorCodes(raw != null ? raw : "N/A");
         language = language.replace("%Ae%", "Ä");
         language = language.replace("%ae%", "ä");
         language = language.replace("%Oe%", "Ö");
