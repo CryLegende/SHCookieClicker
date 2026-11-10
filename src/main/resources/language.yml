@@ -9,6 +9,14 @@ ONLY_PLAYER: '&cYou have to be a player!'
 UNKNOWN_COMMAND: '&cUse /cookieclicker help.'
 PLAYER_NOT_FOUND: '&cThis player does not exist.'
 
+# Network mode (SHNetwork)
+NETWORK_FORWARDED: '&7&l« &e&lSH &8&l» &e%player% &7est sur le serveur &e%server%&7 : la commande lui a été &etransmise&7.'
+NETWORK_IMPORT_NO_NETWORK: '&7&l« &c&lSH &8&l» &7Cette commande demande le &cmode réseau &7(SHNetwork installé et base joignable).'
+NETWORK_IMPORT_NO_FILE: '&7&l« &c&lSH &8&l» &7Aucun fichier &ccookieclicker.db &7à importer.'
+NETWORK_IMPORT_STARTED: '&7&l« &e&lSH &8&l» &7Importation de la progression du fichier SQLite vers la base du réseau...'
+NETWORK_IMPORT_DONE: '&7&l« &a&lSH &8&l» &7Importation terminée : &a%imported% &7joueur(s) ajouté(s), &a%present% &7déjà présent(s).'
+NETWORK_IMPORT_FAILED: '&7&l« &c&lSH &8&l» &7L''importation a échoué, &cvérifiez la console&7.'
+
 # Interact messages
 CLICK_MESSAGE: '&3Your cookies &7%>% &e%cookies%'
 COOKIE_COLLECT_MESSAGE: '&3Your cookies &7%>% &e%cookies% &7+ &6%collectedcookies%'

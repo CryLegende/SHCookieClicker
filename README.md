@@ -21,6 +21,21 @@ dérivés sous la même licence).
   l'original les lisait en 0, 0, 0.
 - Pas de statistiques bStats (l'identifiant est celui du plugin original).
 
+## Mode réseau
+
+Avec **SHNetwork** installé (et `reseau.actif: true`, valeur par défaut), plusieurs serveurs de jeu partagent la progression des joueurs :
+
+- elle est dans la base MySQL du réseau (tables `cookieclicker_players` et `cookieclicker_shops`, mêmes colonnes qu'avant) au lieu du fichier SQLite du serveur ;
+- à la connexion, une fois que l'autre serveur a fini de sauvegarder le joueur, son profil est relu en base ;
+- à son départ, son profil est sauvegardé avant que l'autre serveur ne le lise (la barrière de SHNetwork attend cette sauvegarde) ;
+- tant que le joueur est sur un serveur, la mémoire de ce serveur fait foi : `/cookieclicker modify` et `/cookieclicker reset` visant un joueur d'un autre serveur lui sont transmis et exécutés là où se trouve son profil ; pour un joueur connecté nulle part, le profil est relu en base avant la modification ;
+- la progression du fichier SQLite se copie une fois avec `/cookieclicker import`, sans rien écraser ;
+- les clickers sont dans le monde `spawn` : on ne clique que sur le serveur qui l'héberge, les autres serveurs ne font que relire la progression pour les placeholders `%cookieclicker_...%`.
+
+Sans SHNetwork, ou sans la section `reseau` dans la configuration, le plugin se comporte comme avant : SQLite, ou MySQL avec `mysql.yml`. Si la base du réseau est injoignable au démarrage, il reste en mode local. Les tables se créent toutes seules, ou à la main avec `sql/schema.sql`.
+
+Une commande exécutée par la console (par exemple transmise par un autre serveur) fonctionne désormais : l'original faisait un cast en joueur après avoir accepté la console pour `reset` et `remove`.
+
 ## Compilation
 
 ```

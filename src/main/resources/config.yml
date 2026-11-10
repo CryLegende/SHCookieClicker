@@ -2,7 +2,7 @@
 # <                   CookieClicker                    >
 # +----------------------------------------------------+
 
-# Database
+# Database (un serveur seul : SQLite, ou MySQL avec mysql.yml ; avec SHNetwork, voir la section "reseau" en bas du fichier)
 MySQL: false
 
 # Synchronization duration in minutes
@@ -514,3 +514,22 @@ sounds:
     type: 'BLOCK_END_PORTAL_SPAWN'
     volume: 1.0
     pitch: 1.0
+
+# Mode réseau. Actif seulement si SHNetwork est installé et 'actif' vaut true : la progression des joueurs
+# (cookies, cookies par clic, designs, achats) est alors dans la base partagée (tables cookieclicker_players et
+# cookieclicker_shops) au lieu du fichier SQLite du serveur. Le profil d'un joueur est relu en base à sa connexion,
+# une fois que l'autre serveur a fini de le sauvegarder, et sauvegardé à son départ. Les commandes modify et reset
+# visant un joueur d'un autre serveur lui sont transmises. La progression du fichier SQLite se copie une fois avec
+# /cookieclicker import, sans rien écraser. Les clickers sont dans le monde 'spawn' : on ne clique que là.
+# Sans SHNetwork, rien de ceci n'est utilisé. Demande un redémarrage.
+reseau:
+  actif: true
+  # Durée maximale, en secondes, pendant laquelle on attend que l'autre serveur ait fini de sauvegarder
+  # le joueur avant de lire son profil
+  attente-max-secondes: 10
+  base-de-donnees:
+    hote: 127.0.0.1
+    port: 3306
+    nom: bo_net
+    utilisateur: shcookieclicker
+    mot-de-passe: CHANGE_ME

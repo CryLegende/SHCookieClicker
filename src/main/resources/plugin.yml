@@ -12,3 +12,4 @@ commands:
 softdepend:
   - "Multiverse-Core"
   - "PlaceholderAPI"
+  - "SHNetwork"

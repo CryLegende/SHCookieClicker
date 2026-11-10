@@ -14,6 +14,9 @@ import de.zillolp.cookieclicker.interfaces.PacketReader;
 import de.zillolp.cookieclicker.listener.*;
 import de.zillolp.cookieclicker.listener.inventories.*;
 import de.zillolp.cookieclicker.manager.*;
+import de.zillolp.cookieclicker.network.NetworkCookies;
+import de.zillolp.cookieclicker.network.NetworkLink;
+import de.zillolp.cookieclicker.network.ShNetworkLink;
 import de.zillolp.cookieclicker.placeholder.PlaceholderListener;
 import de.zillolp.cookieclicker.profiles.ClickerInventoryProfile;
 import de.zillolp.cookieclicker.runnables.*;
@@ -32,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +66,8 @@ public class CookieClicker extends JavaPlugin {
     private PacketReader packetReader;
     private StatsWallUpdater statsWallUpdater;
     private ResetTimerUpdater resetTimerUpdater;
+    // Non nul seulement avec SHNetwork : la progression est dans la base partagée
+    private NetworkCookies networkCookies;
 
     // Version SH : reprend les données de l'ancien plugin (plugins/CookieClicker : base, positions, configs) au
     // premier démarrage. Copie seulement, l'ancien dossier reste en place pour un retour arrière.
@@ -101,6 +107,9 @@ public class CookieClicker extends JavaPlugin {
         packetReader = versionManager.getPacketReader();
         registerCommands();
         registerListener(Bukkit.getPluginManager());
+        if (networkCookies != null) {
+            networkCookies.start();
+        }
         loadPlayers();
         registerUpdaters();
     }
@@ -125,7 +134,39 @@ public class CookieClicker extends JavaPlugin {
         permissionsConfig = configManager.getPermissionsConfig();
     }
 
+    // Mode réseau : SHNetwork installé et 'reseau.actif' vrai. La base partagée remplace alors le fichier SQLite du serveur.
+    private boolean connectNetworkDatabase() {
+        FileConfiguration configuration = pluginConfig.getFileConfiguration();
+        if (!(configuration.getBoolean("reseau.actif", true)) || !(Bukkit.getPluginManager().isPluginEnabled("SHNetwork"))) {
+            return false;
+        }
+        try {
+            NetworkLink link = ShNetworkLink.open();
+            databaseConnector = new DatabaseConnector(this, true, "cookieclicker",
+                    configuration.getString("reseau.base-de-donnees.hote", "127.0.0.1"),
+                    String.valueOf(configuration.get("reseau.base-de-donnees.port", "3306")),
+                    configuration.getString("reseau.base-de-donnees.nom", "bo_net"),
+                    configuration.getString("reseau.base-de-donnees.utilisateur", ""),
+                    configuration.getString("reseau.base-de-donnees.mot-de-passe", ""));
+            if (!(databaseConnector.hasConnection())) {
+                databaseConnector.close();
+                getLogger().log(Level.SEVERE, "SHNetwork présent mais base du réseau injoignable, progression locale à ce serveur.");
+                return false;
+            }
+            Duration wait = Duration.ofSeconds(Math.max(1, configuration.getInt("reseau.attente-max-secondes", 10)));
+            networkCookies = new NetworkCookies(this, link, wait);
+            getLogger().info("SHNetwork détecté : la progression est dans la base partagée.");
+            return true;
+        } catch (Exception | LinkageError e) {
+            getLogger().log(Level.SEVERE, "SHNetwork présent mais inutilisable, progression locale à ce serveur : " + e);
+            return false;
+        }
+    }
+
     private void connectDatabase() {
+        if (connectNetworkDatabase()) {
+            return;
+        }
         FileConfiguration mysqlConfiguration = mySQLConfig.getFileConfiguration();
         String serverName = mysqlConfiguration.getString("Host", "localhost");
         String port = mysqlConfiguration.getString("Port", "25565");
@@ -179,6 +220,7 @@ public class CookieClicker extends JavaPlugin {
         if (cookieClickerPluginCommand != null) {
             cookieClickerPluginCommand.setExecutor(cookieClickerCommand);
             cookieClickerCommand.registerSubCommand(new HelpSubCommand(this, "help"));
+            cookieClickerCommand.registerSubCommand(new ImportSubCommand(this, "import"));
             cookieClickerCommand.registerSubCommand(new ListSubCommand(this, "list"));
             cookieClickerCommand.registerSubCommand(new ModifySubCommand(this, "modify", "", "add;set;remove", "COOKIES;PER_CLICK;CLICKER_CLICKS"));
             cookieClickerCommand.registerSubCommand(new ReloadSubCommand(this, "reload"));
@@ -265,6 +307,11 @@ public class CookieClicker extends JavaPlugin {
 
     public PluginConfig getPluginConfig() {
         return pluginConfig;
+    }
+
+    /** Mode réseau actif, ou null sur un serveur seul. */
+    public NetworkCookies getNetwork() {
+        return networkCookies;
     }
 
     public LanguageConfig getLanguageConfig() {

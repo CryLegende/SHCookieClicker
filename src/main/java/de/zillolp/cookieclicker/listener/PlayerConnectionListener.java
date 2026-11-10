@@ -5,12 +5,15 @@ import de.zillolp.cookieclicker.interfaces.PacketReader;
 import de.zillolp.cookieclicker.manager.ClickerEventManager;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.manager.DesignManager;
+import de.zillolp.cookieclicker.network.NetworkCookies;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitScheduler;
+
+import java.util.concurrent.CompletableFuture;
 
 public class PlayerConnectionListener implements Listener {
     private final CookieClicker plugin;
@@ -33,6 +36,11 @@ public class PlayerConnectionListener implements Listener {
     public void onPlayerJoinEvent(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         bukkitScheduler.runTaskAsynchronously(plugin, () -> {
+            NetworkCookies network = plugin.getNetwork();
+            if (network != null) {
+                // Mode réseau : le profil est relu en base une fois le départ de l'autre serveur confirmé
+                network.awaitArrival(player.getUniqueId(), player.getName());
+            }
             clickerPlayerManager.registerPlayer(player);
             bukkitScheduler.runTaskLater(plugin, () -> {
                 packetReader.inject(player);
@@ -44,7 +52,20 @@ public class PlayerConnectionListener implements Listener {
     @EventHandler
     public void onPlayerQuitEvent(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        bukkitScheduler.runTaskAsynchronously(plugin, () -> clickerPlayerManager.unregisterPlayer(player));
+        NetworkCookies network = plugin.getNetwork();
+        if (network != null) {
+            // Mode réseau : la barrière de SHNetwork attend la fin de cette sauvegarde avant que l'autre serveur ne lise
+            CompletableFuture<Void> saved = network.beginQuit(player.getUniqueId());
+            bukkitScheduler.runTaskAsynchronously(plugin, () -> {
+                try {
+                    clickerPlayerManager.unregisterPlayer(player);
+                } finally {
+                    saved.complete(null);
+                }
+            });
+        } else {
+            bukkitScheduler.runTaskAsynchronously(plugin, () -> clickerPlayerManager.unregisterPlayer(player));
+        }
         bukkitScheduler.runTask(plugin, () -> clickerEventManager.deactivateEvents(player.getUniqueId()));
         packetReader.unInject(player);
     }

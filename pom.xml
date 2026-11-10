@@ -96,5 +96,12 @@
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
         </dependency>
+        <!-- Facultatif à l'exécution (softdepend) : sans lui, la progression reste dans la base du serveur -->
+        <dependency>
+            <groupId>org.Cry_Legende</groupId>
+            <artifactId>SHNetwork</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

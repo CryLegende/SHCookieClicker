@@ -20,6 +20,20 @@ public class LanguageConfig extends CustomConfig {
         super(plugin, name);
     }
 
+    @Override
+    public void loadConfiguration() {
+        super.loadConfiguration();
+        // Une clé absente du language.yml du serveur (ajoutée par une mise à jour) prend sa valeur dans celui du jar
+        try (java.io.InputStream in = plugin.getResource("language.yml")) {
+            if (in != null) {
+                fileConfiguration.setDefaults(org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(
+                    new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)));
+            }
+        } catch (java.io.IOException exception) {
+            plugin.getLogger().warning("language.yml du jar illisible : " + exception.getMessage());
+        }
+    }
+
     public String getTranslatedLanguage(String keyName) {
         if (!(fileConfiguration.contains(keyName))) {
             return keyName;

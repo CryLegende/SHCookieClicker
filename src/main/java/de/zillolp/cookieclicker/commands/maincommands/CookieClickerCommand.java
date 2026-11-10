@@ -57,16 +57,17 @@ public class CookieClickerCommand extends MainCommand {
             commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.ONLY_PLAYER));
             return true;
         }
-        Player player = (Player) commandSender;
-        if (!(subCommand.hasPermission(player))) {
+        if (!(subCommand.hasPermission(commandSender))) {
             commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.NO_PERMISSION));
             return true;
         }
-        ClickerGameProfile clickerGameProfile = plugin.getClickerPlayerManager().getGameProfile(player.getUniqueId());
-        if (clickerGameProfile.isOverLastCommandInteraction(500)) {
-            return true;
+        if (commandSender instanceof Player player) {
+            ClickerGameProfile clickerGameProfile = plugin.getClickerPlayerManager().getGameProfile(player.getUniqueId());
+            if (clickerGameProfile.isOverLastCommandInteraction(500)) {
+                return true;
+            }
+            clickerGameProfile.updateLastCommandInteraction();
         }
-        clickerGameProfile.updateLastCommandInteraction();
         if (!(subCommand.onCommand(plugin, commandSender, command, args))) {
             commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.UNKNOWN_COMMAND));
         }

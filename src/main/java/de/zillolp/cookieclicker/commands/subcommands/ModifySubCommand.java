@@ -57,6 +57,11 @@ public class ModifySubCommand extends SubCommand {
             return true;
         }
 
+        // Mode réseau : le joueur est sur un autre serveur, c'est là que se trouve son profil
+        if (plugin.getNetwork() != null && plugin.getNetwork().forwardIfRemote(commandSender, args, 1)) {
+            return true;
+        }
+
         UUID uuid = uuidOptional.get();
         Player player = Bukkit.getPlayer(uuid);
         if (player != null && Bukkit.getOnlinePlayers().contains(player)) {
@@ -72,6 +77,11 @@ public class ModifySubCommand extends SubCommand {
 
         long value = Long.parseLong(args[4]);
         ClickerStatsProfile clickerStatsProfile = clickerPlayerManager.getStatsProfile(uuidOptional.get());
+        if (plugin.getNetwork() != null && player == null) {
+            // Mode réseau : joueur connecté nulle part, son profil en mémoire peut dater d'avant sa dernière partie
+            // sur un autre serveur : on repart de la base
+            databaseManager.loadClickerStatsProfile(clickerStatsProfile, false);
+        }
         switch (args[2].toUpperCase()) {
             case "ADD":
                 setValue(clickerStatsProfile, type, getValue(clickerStatsProfile, type) + value);
@@ -121,7 +131,8 @@ public class ModifySubCommand extends SubCommand {
 
     @Override
     public boolean onlyPlayer() {
-        return true;
+        // Mode réseau : la commande transmise à un autre serveur y est exécutée par la console
+        return plugin.getNetwork() == null;
     }
 
     @Override

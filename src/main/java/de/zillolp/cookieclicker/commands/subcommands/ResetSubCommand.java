@@ -63,6 +63,10 @@ public class ResetSubCommand extends SubCommand {
             commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.PLAYER_NOT_FOUND));
             return true;
         }
+        // Mode réseau : le joueur est sur un autre serveur, c'est là que se trouve son profil
+        if (plugin.getNetwork() != null && plugin.getNetwork().forwardIfRemote(commandSender, args, 1)) {
+            return true;
+        }
         UUID uuid = uuidOptional.get();
         Player player = Bukkit.getPlayer(uuid);
         boolean isPlayerOnline = player != null && Bukkit.getOnlinePlayers().contains(player);
