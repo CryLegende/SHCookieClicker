@@ -1,6 +1,40 @@
-# +----------------------------------------------------+
-# <                   CookieClicker                    >
-# +----------------------------------------------------+
+# ======================================================================== #
+# SHCookieClicker
+#
+# Plugin : CookieClicker de ZilloLP (licence CookieClicker 1.0, voir LICENSE), version SkyHand pour Paper 26.3.
+# Les joueurs cliquent sur un bloc « clicker » pour gagner des cookies, achètent des améliorations et des designs
+# dans la boutique et se comparent sur des murs de statistiques.
+#
+# Commande (alias : /cookieclicker) :
+#   /shcookieclicker stats [joueur]                                  Statistiques d'un joueur (tout le monde).
+#   /shcookieclicker list                                            Liste les clickers.
+#   /shcookieclicker set clicker <n>                                 Fait d'un bloc (clic droit) le clicker <n>.
+#   /shcookieclicker set resettimer                                  Place le chronomètre de réinitialisation à la position du joueur.
+#   /shcookieclicker set statswall <alltime|time> <n>                Crée un mur de statistiques (clic droit sur une tête).
+#   /shcookieclicker remove clicker <n>                              Retire le clicker <n>.
+#   /shcookieclicker remove resettimer                               Retire le chronomètre de réinitialisation.
+#   /shcookieclicker modify <joueur> <add|set|remove> <type> <n>     Modifie COOKIES, PER_CLICK ou CLICKER_CLICKS d'un joueur.
+#   /shcookieclicker reset <joueur>                                  Réinitialise la progression d'un joueur.
+#   /shcookieclicker import                                          Mode réseau : copie la progression SQLite dans la base du réseau.
+#   /shcookieclicker reload                                          Relit config.yml, language.yml, locations.yml et mysql.yml. Un
+#                                                                    fichier illisible ne change rien. MySQL, mysql.yml et reseau demandent
+#                                                                    un redémarrage.
+#   Casser la tête ou la pancarte d'un mur de statistiques le supprime (droit shcookieclicker.admin.remove).
+#
+# Permissions (par défaut : op) :
+#   shcookieclicker.admin          Toutes les sous-commandes d'administration.
+#   shcookieclicker.admin.reload   /shcookieclicker reload
+#   shcookieclicker.admin.list     /shcookieclicker list
+#   shcookieclicker.admin.set      /shcookieclicker set
+#   shcookieclicker.admin.remove   /shcookieclicker remove, et casser un mur de statistiques
+#   shcookieclicker.admin.modify   /shcookieclicker modify
+#   shcookieclicker.admin.reset    /shcookieclicker reset
+#   shcookieclicker.admin.import   /shcookieclicker import
+#   shcookieclicker.premium        Boutique Premium.
+#   La sous-commande stats est ouverte à tous.
+#
+# Les textes sont dans language.yml. Crédit : CookieClicker par ZilloLP, https://github.com/ZilloLP/CookieClicker
+# ======================================================================== #
 
 # Database (un serveur seul : SQLite, ou MySQL avec mysql.yml ; avec SHNetwork, voir la section "reseau" en bas du fichier)
 MySQL: false
@@ -520,7 +554,7 @@ sounds:
 # cookieclicker_shops) au lieu du fichier SQLite du serveur. Le profil d'un joueur est relu en base à sa connexion,
 # une fois que l'autre serveur a fini de le sauvegarder, et sauvegardé à son départ. Les commandes modify et reset
 # visant un joueur d'un autre serveur lui sont transmises. La progression du fichier SQLite se copie une fois avec
-# /cookieclicker import, sans rien écraser. Les clickers sont dans le monde 'spawn' : on ne clique que là.
+# /shcookieclicker import, sans rien écraser. Les clickers sont dans le monde 'spawn' : on ne clique que là.
 # Sans SHNetwork, rien de ceci n'est utilisé. Demande un redémarrage.
 reseau:
   actif: true

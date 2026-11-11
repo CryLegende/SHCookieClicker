@@ -6,8 +6,14 @@
 PREFIX: '&7[&6CookieClicker&7] '
 NO_PERMISSION: '&cYou have no permissions to do this!'
 ONLY_PLAYER: '&cYou have to be a player!'
-UNKNOWN_COMMAND: '&cUse /cookieclicker help.'
 PLAYER_NOT_FOUND: '&cThis player does not exist.'
+
+# Command
+USAGE: '&7&l« &e&lSH &8&l» &7Utilisation : &e/shcookieclicker <%subcommands%>'
+SYNTAX: '&7&l« &e&lSH &8&l» &7Syntaxe : &e/shcookieclicker %syntax%'
+RELOAD_OK: '&7&l« &a&lSH &8&l» &7Configuration &arechargée&7.'
+RELOAD_RESTART: '&8• &7Les clés &6MySQL&7, &6mysql.yml &7et &6reseau &7demandent un redémarrage.'
+RELOAD_ERROR: '&7&l« &c&lSH &8&l» &7Rechargement annulé, &crien n''a été changé&7. Fichier &c%file%&7 : &c%error%'
 
 # Network mode (SHNetwork)
 NETWORK_FORWARDED: '&7&l« &e&lSH &8&l» &e%player% &7est sur le serveur &e%server%&7 : la commande lui a été &etransmise&7.'

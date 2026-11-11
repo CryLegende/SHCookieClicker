@@ -3,7 +3,6 @@ package de.zillolp.cookieclicker.commands.subcommands;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.config.customconfigs.LocationConfig;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import de.zillolp.cookieclicker.manager.HologramManager;
 import de.zillolp.cookieclicker.profiles.ClickerGameProfile;
 import org.bukkit.Bukkit;
@@ -85,6 +84,11 @@ public class SetSubCommand extends SubCommand {
 
     @Override
     public boolean hasPermission(CommandSender commandSender) {
-        return permissionsConfig.hasPermission(commandSender, PluginPermission.ADMIN_PERMISSION);
+        return canAdmin(commandSender, "set");
+    }
+
+    @Override
+    public String getSyntax() {
+        return "set <clicker <numéro>|resettimer|statswall <alltime|time> <numéro>>";
     }
 }

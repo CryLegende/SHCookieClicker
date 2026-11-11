@@ -1,7 +1,6 @@
 package de.zillolp.cookieclicker.commands.subcommands;
 
 import de.zillolp.cookieclicker.CookieClicker;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -44,11 +43,16 @@ public class ListSubCommand extends SubCommand {
 
     @Override
     public boolean hasPermission(CommandSender sender) {
-        return permissionsConfig.hasPermission(sender, PluginPermission.ADMIN_PERMISSION);
+        return canAdmin(sender, "list");
     }
 
     @Override
     public boolean onlyPlayer() {
-        return true;
+        return false;
+    }
+
+    @Override
+    public String getSyntax() {
+        return "list";
     }
 }

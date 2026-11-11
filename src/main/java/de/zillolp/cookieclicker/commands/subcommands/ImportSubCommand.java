@@ -3,7 +3,6 @@ package de.zillolp.cookieclicker.commands.subcommands;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.database.DatabaseConnector;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
@@ -31,7 +30,7 @@ public class ImportSubCommand extends SubCommand {
 
     @Override
     public boolean hasPermission(CommandSender commandSender) {
-        return permissionsConfig.hasPermission(commandSender, PluginPermission.ADMIN_PERMISSION);
+        return canAdmin(commandSender, "import");
     }
 
     @Override
@@ -114,5 +113,10 @@ public class ImportSubCommand extends SubCommand {
             }
             insert.executeBatch();
         }
+    }
+
+    @Override
+    public String getSyntax() {
+        return "import";
     }
 }

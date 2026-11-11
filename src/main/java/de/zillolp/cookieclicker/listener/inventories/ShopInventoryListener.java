@@ -41,7 +41,7 @@ public class ShopInventoryListener extends CustomInventoryListener {
             customScrollingInventory.nextPage();
             customScrollingInventory.update();
         } else if (type == getItemType(CustomItemType.PREMIUM_PAGE) && slot == getItemSlot(CustomItemType.PREMIUM_PAGE) && displayName.equalsIgnoreCase(languageConfig.getTranslatedLanguage(PluginLanguage.PREMIUM_PAGE))) {
-            if (!(plugin.getPermissionsConfig().hasPermission(player, PluginPermission.PREMIUM_PERMISSION))) {
+            if (!(player.hasPermission("shcookieclicker.premium"))) {
                 soundManager.playSound(player, SoundType.PREMIUM_DENY);
                 player.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.NO_PERMISSION));
                 return;

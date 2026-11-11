@@ -5,7 +5,6 @@ import de.zillolp.cookieclicker.config.customconfigs.PluginConfig;
 import de.zillolp.cookieclicker.custominventories.CustomInventory;
 import de.zillolp.cookieclicker.database.DatabaseManager;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.manager.CookieClickerManager;
 import de.zillolp.cookieclicker.manager.DesignManager;
@@ -114,7 +113,7 @@ public class ResetSubCommand extends SubCommand {
 
     @Override
     public boolean hasPermission(CommandSender commandSender) {
-        return permissionsConfig.hasPermission(commandSender, PluginPermission.ADMIN_PERMISSION);
+        return canAdmin(commandSender, "reset");
     }
 
     @Override
@@ -127,5 +126,10 @@ public class ResetSubCommand extends SubCommand {
             playerNames.add(clickerStatsProfile.getName());
         }
         return playerNames;
+    }
+
+    @Override
+    public String getSyntax() {
+        return "reset <joueur>";
     }
 }

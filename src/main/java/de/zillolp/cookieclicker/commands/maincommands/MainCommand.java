@@ -16,6 +16,8 @@ public abstract class MainCommand implements TabExecutor {
     protected final CookieClicker plugin;
     protected final LanguageConfig languageConfig;
     protected final HashMap<String, List<SubCommand>> subCommands = new HashMap<>();
+    // Ordre d'enregistrement, pour la ligne d'usage
+    protected final List<String> subCommandOrder = new ArrayList<>();
 
     public MainCommand(CookieClicker plugin) {
         this.plugin = plugin;
@@ -28,7 +30,9 @@ public abstract class MainCommand implements TabExecutor {
     public void registerSubCommand(SubCommand subCommand) {
         String mainCommand = subCommand.getMainCommand();
         List<SubCommand> mainSubCommands = subCommands.getOrDefault(mainCommand, new ArrayList<>());
-        subCommands.putIfAbsent(mainCommand, mainSubCommands);
+        if (subCommands.putIfAbsent(mainCommand, mainSubCommands) == null) {
+            subCommandOrder.add(mainCommand);
+        }
         mainSubCommands.add(subCommand);
     }
 

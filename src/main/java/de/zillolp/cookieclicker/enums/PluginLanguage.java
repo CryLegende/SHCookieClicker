@@ -4,7 +4,11 @@ public enum PluginLanguage {
     PREFIX,
     NO_PERMISSION,
     ONLY_PLAYER,
-    UNKNOWN_COMMAND,
+    USAGE,
+    SYNTAX,
+    RELOAD_OK,
+    RELOAD_RESTART,
+    RELOAD_ERROR,
     PLAYER_NOT_FOUND,
 
     // Network mode

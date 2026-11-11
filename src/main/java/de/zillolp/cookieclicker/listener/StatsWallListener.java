@@ -3,9 +3,7 @@ package de.zillolp.cookieclicker.listener;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.config.customconfigs.LanguageConfig;
 import de.zillolp.cookieclicker.config.customconfigs.LocationConfig;
-import de.zillolp.cookieclicker.config.customconfigs.PermissionsConfig;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import de.zillolp.cookieclicker.manager.CookieClickerManager;
 import de.zillolp.cookieclicker.utils.ReflectionUtil;
 import org.bukkit.Location;
@@ -32,7 +30,6 @@ public class StatsWallListener implements Listener {
     private final ReflectionUtil reflectionUtil;
     private final LanguageConfig languageConfig;
     private final LocationConfig locationConfig;
-    private final PermissionsConfig permissionsConfig;
     private final CookieClickerManager cookieClickerManager;
 
     public StatsWallListener(CookieClicker plugin) {
@@ -40,7 +37,6 @@ public class StatsWallListener implements Listener {
         reflectionUtil = plugin.getReflectionUtil();
         languageConfig = plugin.getLanguageConfig();
         locationConfig = plugin.getLocationConfig();
-        permissionsConfig = plugin.getPermissionsConfig();
         cookieClickerManager = plugin.getCookieClickerManager();
     }
 
@@ -76,7 +72,7 @@ public class StatsWallListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        player.performCommand("cookieclicker stats " + name);
+        player.performCommand("shcookieclicker stats " + name);
     }
 
     @EventHandler
@@ -95,7 +91,7 @@ public class StatsWallListener implements Listener {
         }
         event.setCancelled(true);
         Player player = event.getPlayer();
-        if (!(permissionsConfig.hasPermission(player, PluginPermission.ADMIN_PERMISSION))) {
+        if (!(player.hasPermission("shcookieclicker.admin.remove") || player.hasPermission("shcookieclicker.admin"))) {
             player.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.NO_PERMISSION));
             return;
         }

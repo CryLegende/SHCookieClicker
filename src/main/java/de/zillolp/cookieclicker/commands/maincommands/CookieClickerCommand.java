@@ -8,8 +8,8 @@ import de.zillolp.cookieclicker.profiles.ClickerGameProfile;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginDescriptionFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CookieClickerCommand extends MainCommand {
@@ -33,32 +33,24 @@ public class CookieClickerCommand extends MainCommand {
             commandSender.sendMessage(PREFIX + "§cThe plugin isn't connected to the database!");
             return true;
         }
-        if (args.length == 0) {
-            PluginDescriptionFile pluginDescription = plugin.getDescription();
-            List<String> authors = pluginDescription.getAuthors();
-            String authorsString = String.join(", ", authors);
-            commandSender.sendMessage("§6§lPlugin Info:");
-            commandSender.sendMessage("§7Plugin Name§8: §e" + pluginDescription.getName());
-            commandSender.sendMessage("§7Plugin Version§8: §e" + pluginDescription.getVersion());
-            if (authors.size() == 1) {
-                commandSender.sendMessage("§7Author§8: §e" + authorsString);
-            } else {
-                commandSender.sendMessage("§7Authors§8: §e" + authorsString);
+        List<String> allowed = new ArrayList<>();
+        for (String mainCommand : subCommandOrder) {
+            if (subCommands.get(mainCommand).get(0).hasPermission(commandSender)) {
+                allowed.add(mainCommand);
             }
-            commandSender.sendMessage("§7Discord§8: §e" + pluginDescription.getWebsite());
+        }
+        List<SubCommand> found = args.length == 0 ? null : subCommands.get(args[0].toLowerCase());
+        if (found == null) {
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.USAGE).replace("%subcommands%", String.join("|", allowed)));
             return true;
         }
-        if (!(subCommands.containsKey(args[0].toLowerCase()))) {
-            commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.UNKNOWN_COMMAND));
-            return true;
-        }
-        SubCommand subCommand = subCommands.get(args[0]).get(0);
-        if (subCommand.onlyPlayer() && (!(commandSender instanceof Player))) {
-            commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.ONLY_PLAYER));
-            return true;
-        }
+        SubCommand subCommand = found.get(0);
         if (!(subCommand.hasPermission(commandSender))) {
             commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.NO_PERMISSION));
+            return true;
+        }
+        if (subCommand.onlyPlayer() && (!(commandSender instanceof Player))) {
+            commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.ONLY_PLAYER));
             return true;
         }
         if (commandSender instanceof Player player) {
@@ -69,7 +61,7 @@ public class CookieClickerCommand extends MainCommand {
             clickerGameProfile.updateLastCommandInteraction();
         }
         if (!(subCommand.onCommand(plugin, commandSender, command, args))) {
-            commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.UNKNOWN_COMMAND));
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SYNTAX).replace("%syntax%", subCommand.getSyntax()));
         }
         return true;
     }

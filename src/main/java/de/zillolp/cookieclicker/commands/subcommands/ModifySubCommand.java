@@ -4,7 +4,6 @@ import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.custominventories.CustomInventory;
 import de.zillolp.cookieclicker.database.DatabaseManager;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.profiles.ClickerInventoryProfile;
 import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
@@ -131,13 +130,12 @@ public class ModifySubCommand extends SubCommand {
 
     @Override
     public boolean onlyPlayer() {
-        // Mode réseau : la commande transmise à un autre serveur y est exécutée par la console
-        return plugin.getNetwork() == null;
+        return false;
     }
 
     @Override
     public boolean hasPermission(CommandSender commandSender) {
-        return permissionsConfig.hasPermission(commandSender, PluginPermission.ADMIN_PERMISSION);
+        return canAdmin(commandSender, "modify");
     }
 
     @Override
@@ -150,5 +148,10 @@ public class ModifySubCommand extends SubCommand {
             playerNames.add(clickerStatsProfile.getName());
         }
         return playerNames;
+    }
+
+    @Override
+    public String getSyntax() {
+        return "modify <joueur> <add|set|remove> <COOKIES|PER_CLICK|CLICKER_CLICKS> <montant>";
     }
 }

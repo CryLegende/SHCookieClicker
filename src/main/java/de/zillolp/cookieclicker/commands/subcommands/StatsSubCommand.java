@@ -92,4 +92,9 @@ public class StatsSubCommand extends SubCommand {
         }
         return playerNames;
     }
+
+    @Override
+    public String getSyntax() {
+        return "stats [joueur]";
+    }
 }

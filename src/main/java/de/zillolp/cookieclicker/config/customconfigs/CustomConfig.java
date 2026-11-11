@@ -2,6 +2,7 @@ package de.zillolp.cookieclicker.config.customconfigs;
 
 import de.zillolp.cookieclicker.CookieClicker;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -21,12 +22,34 @@ public class CustomConfig {
         loadConfiguration();
     }
 
+    /** Chargement au démarrage : un fichier illisible est signalé et la configuration reste vide. */
     public void loadConfiguration() {
+        try {
+            apply(parse());
+        } catch (IOException | InvalidConfigurationException exception) {
+            plugin.getLogger().log(Level.SEVERE, name + " illisible : " + exception.getMessage());
+            apply(fileConfiguration != null ? (YamlConfiguration) fileConfiguration : new YamlConfiguration());
+        }
+    }
+
+    /** Lit le fichier (créé à partir du jar s'il manque) sans rien appliquer. */
+    public YamlConfiguration parse() throws IOException, InvalidConfigurationException {
         file = new File(plugin.getDataFolder(), name);
         if (!(file.exists())) {
             plugin.saveResource(name, true);
         }
-        fileConfiguration = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.load(file);
+        return yaml;
+    }
+
+    /** Remplace la configuration en mémoire par une lecture réussie. */
+    public void apply(YamlConfiguration yaml) {
+        fileConfiguration = yaml;
+    }
+
+    public String getFileName() {
+        return name;
     }
 
     protected void save() {

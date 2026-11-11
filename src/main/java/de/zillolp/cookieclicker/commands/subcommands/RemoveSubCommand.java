@@ -3,7 +3,6 @@ package de.zillolp.cookieclicker.commands.subcommands;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.config.customconfigs.LocationConfig;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.enums.PluginPermission;
 import de.zillolp.cookieclicker.manager.HologramManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -81,7 +80,7 @@ public class RemoveSubCommand extends SubCommand {
 
     @Override
     public boolean hasPermission(CommandSender commandSender) {
-        return permissionsConfig.hasPermission(commandSender, PluginPermission.ADMIN_PERMISSION);
+        return canAdmin(commandSender, "remove");
     }
 
     @Override
@@ -90,5 +89,10 @@ public class RemoveSubCommand extends SubCommand {
             return null;
         }
         return locationConfig.getClickerNumbers("CookieClicker");
+    }
+
+    @Override
+    public String getSyntax() {
+        return "remove <clicker <numéro>|resettimer>";
     }
 }

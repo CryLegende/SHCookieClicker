@@ -7,9 +7,48 @@ description: "Version SkyHand de CookieClicker par ZilloLP (licence CookieClicke
 authors: [ZilloLP, Cry_Legende]
 website: https://github.com/ZilloLP/CookieClicker
 commands:
-  cookieclicker:
-    description: Manage CookieClicker
+  shcookieclicker:
+    description: Statistiques et administration de CookieClicker
+    aliases: [cookieclicker]
+    usage: /shcookieclicker <stats|reload|list|set|remove|modify|reset|import>
 softdepend:
   - "Multiverse-Core"
   - "PlaceholderAPI"
   - "SHNetwork"
+
+permissions:
+  shcookieclicker.admin:
+    description: Toute l'administration de CookieClicker
+    default: op
+    children:
+      shcookieclicker.admin.reload: true
+      shcookieclicker.admin.list: true
+      shcookieclicker.admin.set: true
+      shcookieclicker.admin.remove: true
+      shcookieclicker.admin.modify: true
+      shcookieclicker.admin.reset: true
+      shcookieclicker.admin.import: true
+  shcookieclicker.admin.reload:
+    description: Recharger la configuration
+    default: op
+  shcookieclicker.admin.list:
+    description: Lister les clickers
+    default: op
+  shcookieclicker.admin.set:
+    description: Poser un clicker, le chronomètre de réinitialisation ou un mur de statistiques
+    default: op
+  shcookieclicker.admin.remove:
+    description: Retirer un clicker, le chronomètre ou un mur de statistiques (casser le mur)
+    default: op
+  shcookieclicker.admin.modify:
+    description: Modifier les cookies, le gain par clic ou les clics d'un joueur
+    default: op
+  shcookieclicker.admin.reset:
+    description: Réinitialiser la progression d'un joueur
+    default: op
+  shcookieclicker.admin.import:
+    description: Reprendre la progression du fichier SQLite dans la base du réseau
+    default: op
+  shcookieclicker.premium:
+    description: Accéder à la boutique Premium
+    default: op

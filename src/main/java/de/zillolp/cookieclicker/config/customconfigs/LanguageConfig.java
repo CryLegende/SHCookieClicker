@@ -21,8 +21,8 @@ public class LanguageConfig extends CustomConfig {
     }
 
     @Override
-    public void loadConfiguration() {
-        super.loadConfiguration();
+    public void apply(org.bukkit.configuration.file.YamlConfiguration yaml) {
+        super.apply(yaml);
         // Une clé absente du language.yml du serveur (ajoutée par une mise à jour) prend sa valeur dans celui du jar
         try (java.io.InputStream in = plugin.getResource("language.yml")) {
             if (in != null) {

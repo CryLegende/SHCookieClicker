@@ -49,7 +49,6 @@ public class CookieClicker extends JavaPlugin {
     private LanguageConfig languageConfig;
     private LocationConfig locationConfig;
     private MySQLConfig mySQLConfig;
-    private PermissionsConfig permissionsConfig;
     private VersionManager versionManager;
     private DatabaseConnector databaseConnector;
     private ConfigManager configManager;
@@ -131,7 +130,6 @@ public class CookieClicker extends JavaPlugin {
         languageConfig = configManager.getLanguageConfig();
         locationConfig = configManager.getLocationConfig();
         mySQLConfig = configManager.getMySQLConfig();
-        permissionsConfig = configManager.getPermissionsConfig();
     }
 
     // Mode réseau : SHNetwork installé et 'reseau.actif' vrai. La base partagée remplace alors le fichier SQLite du serveur.
@@ -196,7 +194,7 @@ public class CookieClicker extends JavaPlugin {
         boolean isCompatible = isVersion && isConnected;
         if (!(isCompatible)) {
             CookieClickerCommand cookieClickerCommand = new CookieClickerCommand(this);
-            PluginCommand cookieClickerPluginCommand = getCommand("cookieclicker");
+            PluginCommand cookieClickerPluginCommand = getCommand("shcookieclicker");
             if (cookieClickerPluginCommand != null) {
                 cookieClickerPluginCommand.setExecutor(cookieClickerCommand);
             }
@@ -216,10 +214,9 @@ public class CookieClicker extends JavaPlugin {
 
     private void registerCommands() {
         CookieClickerCommand cookieClickerCommand = new CookieClickerCommand(this);
-        PluginCommand cookieClickerPluginCommand = getCommand("cookieclicker");
+        PluginCommand cookieClickerPluginCommand = getCommand("shcookieclicker");
         if (cookieClickerPluginCommand != null) {
             cookieClickerPluginCommand.setExecutor(cookieClickerCommand);
-            cookieClickerCommand.registerSubCommand(new HelpSubCommand(this, "help"));
             cookieClickerCommand.registerSubCommand(new ImportSubCommand(this, "import"));
             cookieClickerCommand.registerSubCommand(new ListSubCommand(this, "list"));
             cookieClickerCommand.registerSubCommand(new ModifySubCommand(this, "modify", "", "add;set;remove", "COOKIES;PER_CLICK;CLICKER_CLICKS"));
@@ -284,6 +281,18 @@ public class CookieClicker extends JavaPlugin {
         }
     }
 
+    /** Relance la sauvegarde périodique avec l'intervalle « Cache synchronization » du config.yml. */
+    public void restartStatsUpdater() {
+        customUpdaters.removeIf(updater -> {
+            if (updater instanceof StatsUpdater) {
+                updater.stop();
+                return true;
+            }
+            return false;
+        });
+        customUpdaters.add(new StatsUpdater(this, pluginConfig.getCacheSynchronizationTime()));
+    }
+
     public void unloadPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             clickerEventManager.deactivateEvents(player.getUniqueId());
@@ -320,10 +329,6 @@ public class CookieClicker extends JavaPlugin {
 
     public LocationConfig getLocationConfig() {
         return locationConfig;
-    }
-
-    public PermissionsConfig getPermissionsConfig() {
-        return permissionsConfig;
     }
 
     public VersionManager getVersionManager() {
