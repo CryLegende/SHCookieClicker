@@ -1,7 +1,5 @@
 package de.zillolp.cookieclicker.utils;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.zillolp.cookieclicker.CookieClicker;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,20 +17,14 @@ import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Base64;
-import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,18 +34,9 @@ import java.util.logging.Logger;
  * paquets versionnés). Les méthodes publiques gardent leur signature pour le reste du plugin.
  */
 public class ReflectionUtil {
-    private final int MAX_API_CALLS_PER_MINUTE = 600;
     private final CookieClicker plugin;
     private final BukkitScheduler bukkitScheduler;
     private final Logger logger;
-    private final Semaphore apiRateLimiter = new Semaphore(MAX_API_CALLS_PER_MINUTE);
-    private final Map<String, String> playerTextures = new LinkedHashMap<String, String>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
-            return size() > 500;
-        }
-    };
-    private long lastRateLimitReset = System.currentTimeMillis();
 
     public ReflectionUtil(CookieClicker plugin) {
         this.plugin = plugin;
@@ -108,8 +91,12 @@ public class ReflectionUtil {
         return world.getName().equals(world1.getName()) && location.getX() == location1.getX() && location.getY() == location1.getY() && location.getZ() == location1.getZ();
     }
 
-    // profil réel du joueur (skin appliqué par SkinsRestorer compris)
-    public PlayerProfile getRealPlayerProfile(Player player) {
+    // profil du joueur connecté : le skin de SHSkins, sinon celui reçu à sa connexion
+    public com.destroystokyo.paper.profile.PlayerProfile getRealPlayerProfile(Player player) {
+        com.destroystokyo.paper.profile.PlayerProfile profile = PlayerHeads.profile(player.getUniqueId(), player.getName());
+        if (profile.hasTextures()) {
+            return profile;
+        }
         return player.getPlayerProfile();
     }
 
@@ -131,85 +118,6 @@ public class ReflectionUtil {
             completableFuture.complete(playerProfile);
         });
         return completableFuture;
-    }
-
-    public CompletableFuture<String> getTextureURL(String playerName) {
-        String inputName = playerName.toLowerCase();
-        CompletableFuture<String> completableFuture = new CompletableFuture<>();
-
-        synchronized (playerTextures) {
-            if (playerTextures.containsKey(inputName)) {
-                completableFuture.complete(playerTextures.get(inputName));
-                return completableFuture;
-            }
-        }
-
-        bukkitScheduler.runTaskAsynchronously(plugin, () -> {
-            try {
-                resetRateLimiterIfNeeded();
-
-                if (!apiRateLimiter.tryAcquire()) {
-                    logger.log(Level.WARNING, "API rate limit reached, skipping texture fetch for: " + playerName);
-                    completableFuture.complete(null);
-                    return;
-                }
-
-                try {
-                    URL uuidURL = URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/" + playerName).toURL();
-                    try (InputStreamReader uuidReader = new InputStreamReader(uuidURL.openStream())) {
-                        JsonObject uuidJson = JsonParser.parseReader(uuidReader).getAsJsonObject();
-                        if (uuidJson == null || !uuidJson.has("id")) {
-                            completableFuture.complete(null);
-                            return;
-                        }
-                        String uuid = uuidJson.get("id").getAsString();
-
-                        URL profileURL = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid).toURL();
-                        try (InputStreamReader profileReader = new InputStreamReader(profileURL.openStream())) {
-                            JsonObject profileResponse = JsonParser.parseReader(profileReader).getAsJsonObject();
-                            if (profileResponse == null || !profileResponse.has("properties")) {
-                                completableFuture.complete(null);
-                                return;
-                            }
-
-                            String base64Encoded = profileResponse.getAsJsonArray("properties").get(0).getAsJsonObject().get("value").getAsString();
-                            String decodedJson = new String(Base64.getDecoder().decode(base64Encoded));
-
-                            JsonObject textureObject = JsonParser.parseString(decodedJson).getAsJsonObject();
-                            String textureURL = textureObject.getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
-
-                            synchronized (playerTextures) {
-                                playerTextures.put(inputName, textureURL);
-                            }
-                            completableFuture.complete(textureURL);
-                        }
-                    }
-                } finally {
-                    apiRateLimiter.release();
-                }
-            } catch (IOException exception) {
-                if (exception.getMessage() != null && exception.getMessage().contains("404")) {
-                    completableFuture.complete(null);
-                } else {
-                    logger.log(Level.SEVERE, "Error getting TextureURL for player: " + playerName, exception);
-                    completableFuture.complete(null);
-                }
-            } catch (Exception exception) {
-                logger.log(Level.SEVERE, "Error getting TextureURL for player: " + playerName, exception);
-                completableFuture.complete(null);
-            }
-        });
-        return completableFuture;
-    }
-
-    private synchronized void resetRateLimiterIfNeeded() {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastRateLimitReset >= 60000) {
-            int availablePermits = apiRateLimiter.availablePermits();
-            int usedPermits = MAX_API_CALLS_PER_MINUTE - availablePermits;
-            apiRateLimiter.release(usedPermits);
-            lastRateLimitReset = currentTime;
-        }
     }
 
     // les configs gardent les anciens noms d'enum (ENTITY_PLAYER_LEVELUP) ; en 26.x les sons sont un registre

@@ -1,8 +1,8 @@
 package de.zillolp.cookieclicker.interfaces;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.profile.PlayerProfile;
 
 public interface ItemBuilder {
 

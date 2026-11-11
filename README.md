@@ -20,6 +20,12 @@ dérivés sous la même licence).
 - **Positions de CookieClicker 4.x** (`==: org.bukkit.Location` dans `locations.yml`) relues correctement ;
   l'original les lisait en 0, 0, 0.
 - Pas de statistiques bStats (l'identifiant est celui du plugin original).
+- **Têtes des joueurs par SHSkins.** Le mur de statistiques (un classement montre souvent des joueurs hors ligne) et le
+  design de bloc « tête du joueur » prennent le skin de chaque joueur dans **SHSkins** (facultatif, `softdepend`). Sur
+  le réseau en mode hors ligne, l'UUID d'un joueur est inconnu de Mojang : une tête construite avec son seul pseudo
+  afficherait Steve ou Alex. Sans SHSkins, la tête n'a que l'UUID et le pseudo (skin par défaut), sauf celle du joueur
+  connecté qui garde le profil reçu à sa connexion. Le plugin ne fait plus aucune requête à Mojang : l'original
+  cherchait chaque pseudo auprès de leur API.
 
 ## Mode réseau
 
@@ -71,4 +77,6 @@ CookieClicker est l'œuvre de ZilloLP (https://github.com/ZilloLP/CookieClicker)
 mvn package
 ```
 
-Le jar est `target/SHCookieClicker-1.1.jar`.
+SHSkins doit être installé dans le dépôt Maven local avant la compilation : `mvn install` dans `SHSkins-Velocity`.
+
+Le jar est `target/SHCookieClicker-1.2.jar`.

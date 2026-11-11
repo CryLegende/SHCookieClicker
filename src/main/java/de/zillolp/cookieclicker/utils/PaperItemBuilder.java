@@ -1,5 +1,6 @@
 package de.zillolp.cookieclicker.utils;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.interfaces.ItemBuilder;
 import org.bukkit.Material;
@@ -12,7 +13,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.profile.PlayerProfile;
 
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -100,7 +100,7 @@ public class PaperItemBuilder implements ItemBuilder {
                 });
             } else if (playerProfile != null) {
                 SkullMeta skullMeta = (SkullMeta) itemMeta;
-                skullMeta.setOwnerProfile(playerProfile);
+                skullMeta.setPlayerProfile(playerProfile);
                 itemStack.setItemMeta(skullMeta);
             }
             return itemStack;

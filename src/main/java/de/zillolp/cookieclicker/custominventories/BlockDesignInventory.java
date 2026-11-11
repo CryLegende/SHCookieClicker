@@ -1,5 +1,6 @@
 package de.zillolp.cookieclicker.custominventories;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.enums.CustomInventoryType;
 import de.zillolp.cookieclicker.enums.CustomItemType;
@@ -10,7 +11,6 @@ import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.profile.PlayerProfile;
 
 import java.util.LinkedList;
 import java.util.Map;

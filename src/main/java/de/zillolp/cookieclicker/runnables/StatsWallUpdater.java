@@ -1,10 +1,13 @@
 package de.zillolp.cookieclicker.runnables;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.config.customconfigs.LanguageConfig;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.manager.CookieClickerManager;
 import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
+import de.zillolp.cookieclicker.utils.PlayerHeads;
 import de.zillolp.cookieclicker.utils.ReflectionUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -12,7 +15,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.Skull;
-import org.bukkit.profile.PlayerProfile;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -98,20 +100,7 @@ public class StatsWallUpdater extends CustomUpdater {
             sign.update(true);
         });
         if (name != null && (!(name.equals("?"))) && plugin.getDatabaseManager().playerExists(name)) {
-            hasPlayerSkull(headBlock, name).thenAccept(hasPlayerSkull -> {
-                if (hasPlayerSkull) {
-                    return;
-                }
-                reflectionUtil.getTextureURL(name).thenAccept(textureUrl -> {
-                    setSkullProfile(textureUrl, name, headBlock);
-                }).exceptionally(throwable -> {
-                    plugin.getLogger().log(Level.SEVERE, "Failed to load TextureURL for Name: " + name, throwable);
-                    return null;
-                });
-            }).exceptionally(throwable -> {
-                plugin.getLogger().log(Level.SEVERE, "Failed to check hasPlayerSkull for Name: " + name, throwable);
-                return null;
-            });
+            setPlayerSkull(headBlock, name);
             return;
         }
         String questionName = "?";
@@ -125,6 +114,40 @@ public class StatsWallUpdater extends CustomUpdater {
             plugin.getLogger().log(Level.SEVERE, "Failed to check hasPlayerSkull for Name: " + questionName, throwable);
             return null;
         });
+    }
+
+    // tête d'un joueur du classement, connecté ou non : son skin vient de SHSkins (en mémoire, sans requête réseau).
+    // La tête n'est réécrite que si le pseudo ou les textures ont changé (le skin n'est pas connu au démarrage).
+    private void setPlayerSkull(Block block, String name) {
+        bukkitScheduler.runTask(plugin, () -> {
+            BlockState blockState = block.getState();
+            if (!(blockState instanceof Skull)) {
+                return;
+            }
+            Skull skull = (Skull) blockState;
+            PlayerProfile wanted = PlayerHeads.profile(null, name);
+            if (hasSameSkin(skull.getPlayerProfile(), wanted)) {
+                return;
+            }
+            skull.setPlayerProfile(wanted);
+            skull.update(true);
+        });
+    }
+
+    private boolean hasSameSkin(PlayerProfile current, PlayerProfile wanted) {
+        if (current == null || current.getName() == null || !current.getName().equals(wanted.getName())) {
+            return false;
+        }
+        return Objects.equals(getTextures(current), getTextures(wanted));
+    }
+
+    private String getTextures(PlayerProfile playerProfile) {
+        for (ProfileProperty property : playerProfile.getProperties()) {
+            if (property.getName().equals("textures")) {
+                return property.getValue();
+            }
+        }
+        return null;
     }
 
     private void setSkullProfile(String url, String name, Block block) {
@@ -147,7 +170,7 @@ public class StatsWallUpdater extends CustomUpdater {
     private CompletableFuture<Boolean> hasPlayerSkull(Block block, String name) {
         CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
         bukkitScheduler.runTask(plugin, () -> {
-            PlayerProfile playerProfile = ((Skull) block.getState()).getOwnerProfile();
+            PlayerProfile playerProfile = ((Skull) block.getState()).getPlayerProfile();
             completableFuture.complete(playerProfile != null && playerProfile.getName() != null && playerProfile.getName().equals(name));
         });
         return completableFuture;

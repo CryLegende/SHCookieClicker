@@ -33,6 +33,9 @@
 #   shcookieclicker.premium        Boutique Premium.
 #   La sous-commande stats est ouverte à tous.
 #
+# Têtes des joueurs (murs de statistiques, design de bloc REAL_PLAYER_HEAD) : le skin vient de SHSkins quand il est installé.
+# Sans lui, la tête n'a que l'UUID et le pseudo (skin par défaut) ; le plugin ne fait aucune requête à Mojang.
+#
 # Les textes sont dans language.yml. Crédit : CookieClicker par ZilloLP, https://github.com/ZilloLP/CookieClicker
 # ======================================================================== #
 
