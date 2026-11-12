@@ -45,6 +45,12 @@ administration:
   modifie: '&7&l« &a&lSH &8&l» &e{type} &7de &e{joueur} &7: &a{valeur}&7.'
   remis-a-zero: '&7&l« &a&lSH &8&l» &7Progression de &e{joueur} &aremise à zéro&7.'
 
+cookie-mobile:
+  # {secondes} = durée.
+  active: '&7&l« &a&lSH &8&l» &7Cookie mobile &aactivé &7pour &a{secondes} s&7.'
+  arrete: '&7&l« &a&lSH &8&l» &7Cookie mobile &aarrêté&7.'
+  inactif: '&7&l« &e&lSH &8&l» &7Le cookie mobile &en''est pas en cours&7.'
+
 reseau:
   # {joueur}, {serveur}
   transmis: '&7&l« &e&lSH &8&l» &e{joueur} &7est sur &e{serveur}&7 : la commande lui a été &etransmise&7.'

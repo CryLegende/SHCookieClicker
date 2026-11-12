@@ -41,6 +41,7 @@ permissions:
       shcookieclicker.admin.remove: true
       shcookieclicker.admin.modify: true
       shcookieclicker.admin.reset: true
+      shcookieclicker.admin.moving: true
       shcookieclicker.admin.import: true
   shcookieclicker.admin.reload:
     description: /shcookieclicker reload
@@ -59,6 +60,9 @@ permissions:
     default: op
   shcookieclicker.admin.reset:
     description: /shcookieclicker reset
+    default: op
+  shcookieclicker.admin.moving:
+    description: /shcookieclicker moving (cookie mobile)
     default: op
   shcookieclicker.admin.import:
     description: /shcookieclicker import (mode réseau)

@@ -20,6 +20,11 @@ public final class Pose {
      * {@code (0, qy, 0, qw)}) et taille.
      */
     public record Frame(float tx, float ty, float tz, float qy, float qw, float scale) {
+
+        /** La même pose, déplacée de {@code offset} (cookie mobile). */
+        public Frame shifted(Places.Offset offset) {
+            return new Frame(tx + offset.x(), ty + offset.y(), tz + offset.z(), qy, qw, scale);
+        }
     }
 
     /**

@@ -36,7 +36,7 @@ import java.util.logging.Level;
  * monde s'exécute au tick suivant, sur le fil principal.
  */
 public final class AdminCommand implements TabExecutor {
-    private static final List<String> SUBCOMMANDS = List.of("reload", "list", "set", "remove", "modify", "reset", "import");
+    private static final List<String> SUBCOMMANDS = List.of("reload", "list", "set", "remove", "modify", "reset", "moving", "import");
     private static final List<String> OPERATIONS = List.of("add", "set", "remove");
     private static final List<String> FIELDS = List.of("COOKIES", "PER_CLICK", "CLICKER_CLICKS");
 
@@ -89,6 +89,7 @@ public final class AdminCommand implements TabExecutor {
             case "remove" -> remove(sender, args);
             case "modify" -> modify(sender, args);
             case "reset" -> reset(sender, args);
+            case "moving" -> moving(sender, args);
             case "import" -> importSqlite(sender);
             default -> {
             }
@@ -303,6 +304,26 @@ public final class AdminCommand implements TabExecutor {
         }
     }
 
+    // ---- cookie mobile
+
+    private void moving(CommandSender sender, String[] args) {
+        Messages messages = plugin.messages();
+        if (args.length < 2) {
+            syntax(sender, "moving <secondes|off>");
+            return;
+        }
+        if (args[1].equalsIgnoreCase("off")) {
+            messages.send(sender, plugin.display().stopMoving() ? "cookie-mobile.arrete" : "cookie-mobile.inactif");
+            return;
+        }
+        Integer seconds = number(sender, args[1]);
+        if (seconds == null) {
+            return;
+        }
+        plugin.display().startMoving(seconds);
+        messages.send(sender, "cookie-mobile.active", "secondes", String.valueOf(seconds));
+    }
+
     // ---- mode réseau
 
     private void importSqlite(CommandSender sender) {
@@ -351,6 +372,7 @@ public final class AdminCommand implements TabExecutor {
                 default -> List.of();
             };
             case "reset" -> args.length == 2 ? playerNames(plugin, args[1]) : List.of();
+            case "moving" -> args.length == 2 ? filter(List.of("off"), args[1]) : List.of();
             default -> List.of();
         };
     }

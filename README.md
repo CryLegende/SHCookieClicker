@@ -35,6 +35,25 @@ droit : le menu) et joués au tick suivant sur le fil principal.
 - `/shcookieclicker set clicker <n>` prend toujours le bloc cliqué comme repère : le clicker est sa case, l'objet
   flotte à `hauteur` au-dessus de son centre ; le bloc lui-même peut être de l'air.
 
+## Cookie mobile (tournois)
+
+`/shcookieclicker moving <secondes>` : pendant ce temps, la zone de clic rétrécit (`cookie-mobile.zone-de-clic`,
+0,8 bloc) et l'objet de chaque joueur change de place tous les `clics-par-place` clics qui comptent (3). Un autoclic,
+qui clique toujours au même endroit, ne touche plus rien : il faut viser. Le nombre de clics sur le clicker devient
+une mesure d'adresse, la même pour tous, quelles que soient les améliorations.
+
+- Places : une grille au quart de bloc autour de la place habituelle (`ecart-cote`, `ecart-bas`, `ecart-haut`),
+  calculée au lancement d'après les blocs du monde ; une place où la zone toucherait un bloc plein est écartée. Deux
+  places de suite sont à au moins `distance-minimale` (1 bloc). L'objet glisse vers la nouvelle place en
+  `deplacement-ticks` (2).
+- À chaque changement de place, la zone de clic est remplacée par une neuve : un clic envoyé avant que le joueur ait vu
+  la nouvelle place vise l'ancienne zone et ne compte pas (il est bloqué, sans cookie ni bond).
+- Le reste ne change pas : 12 clics par seconde au plus, anti-AFK, cookie doré, explosions, designs.
+- Le mode s'arrête seul au bout du temps donné, ou par `/shcookieclicker moving off`. Il ne survit pas à un
+  rechargement du plugin.
+- SHFastTournament le lance avec le tournoi `Cookie-mobile` (type `PLACEHOLDER` sur `%cookieclicker_clickerclicks%`) :
+  `start-commands: shcookieclicker moving %seconds%`, `end-commands: shcookieclicker moving off`.
+
 ## Commandes et permissions
 
 | Commande | Permission | |
@@ -46,6 +65,7 @@ droit : le menu) et joués au tick suivant sur le fil principal.
 | `/shcookieclicker remove clicker <n>` | `shcookieclicker.admin.remove` | |
 | `/shcookieclicker modify <joueur> <add\|set\|remove> <COOKIES\|PER_CLICK\|CLICKER_CLICKS> <n>` | `shcookieclicker.admin.modify` | |
 | `/shcookieclicker reset <joueur>` | `shcookieclicker.admin.reset` | |
+| `/shcookieclicker moving <secondes\|off>` | `shcookieclicker.admin.moving` | Cookie mobile pendant ce nombre de secondes ; `off` : arrêt. |
 | `/shcookieclicker import` | `shcookieclicker.admin.import` | Mode réseau : copie le fichier SQLite dans la base du réseau, sans rien écraser. |
 
 `shcookieclicker.admin` (op) donne toutes les sous-commandes, `shcookieclicker.premium` (op) la boutique VipElite.

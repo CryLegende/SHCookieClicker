@@ -41,6 +41,7 @@ public final class Settings {
     public final boolean clickerHologram;
     public final boolean gainHolograms;
     public final Appearance appearance;
+    public final MovingCookie movingCookie;
     public final String thousandsSeparator;
     public final SoundSet sounds;
 
@@ -86,6 +87,7 @@ public final class Settings {
         clickerHologram = file.getBoolean("hologrammes.clicker", false);
         gainHolograms = file.getBoolean("hologrammes.gains", true);
         appearance = Appearance.parse(file.getConfigurationSection("apparence"), warn);
+        movingCookie = MovingCookie.parse(file.getConfigurationSection("cookie-mobile"));
         thousandsSeparator = file.getString("affichage.separateur-milliers", " ");
         sounds = SoundSet.parse(file.getConfigurationSection("sons"), warn);
 

@@ -4,22 +4,26 @@ import com.github.retrooper.packetevents.event.PacketListenerCommon;
 import org.Cry_Legende.sHCookieClicker.SHCookieClicker;
 import org.Cry_Legende.sHCookieClicker.config.Appearance;
 import org.Cry_Legende.sHCookieClicker.config.Designs;
+import org.Cry_Legende.sHCookieClicker.config.MovingCookie;
 import org.Cry_Legende.sHCookieClicker.data.Profile;
 import org.Cry_Legende.sHCookieClicker.data.ShopKind;
 import org.Cry_Legende.sHCookieClicker.hook.Heads;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
@@ -34,6 +38,10 @@ import java.util.logging.Level;
  * s'éloignent, et il envoie à ceux qui le voient la prochaine pose quand leur objet n'a plus de mouvement en cours.
  * Le client lisse le mouvement entre deux envois : au repos, un paquet de quelques dizaines d'octets tous les
  * 5 ticks et par joueur.
+ * <p>
+ * Cookie mobile (/shcookieclicker moving, pour les tournois) : la zone de clic rétrécit et l'objet de chaque joueur
+ * change de place tous les quelques clics qui comptent. À chaque changement, la zone de clic est remplacée par une
+ * neuve : un clic envoyé avant que le joueur ait vu la nouvelle place vise l'ancienne et ne compte pas.
  */
 public final class ClickerDisplay {
     private static final int SWEEP_TICKS = 10;
@@ -51,6 +59,8 @@ public final class ClickerDisplay {
     private final SHCookieClicker plugin;
     private final Map<UUID, View> views = new ConcurrentHashMap<>();
     private final Queue<Click> clicks = new ConcurrentLinkedQueue<>();
+    /** Cookie mobile en cours, ou null. */
+    private volatile Moving moving;
     private PacketListenerCommon input;
     private BukkitTask task;
 
@@ -66,11 +76,25 @@ public final class ClickerDisplay {
         }
     }
 
+    /** Cookie mobile : heure de fin (ms) et places possibles autour de chaque clicker. */
+    private record Moving(long until, Map<Clickers.Spot, List<Places.Offset>> places) {
+        List<Places.Offset> at(Clickers.Spot spot) {
+            return places.getOrDefault(spot, List.of());
+        }
+    }
+
     /** Un objet et sa zone de clic, montés à un joueur. */
     private static final class Shown {
         final int entityId;
-        final int hitboxId;
+        /** Zone de clic, remplacée à chaque changement de place du cookie mobile. */
+        volatile int hitboxId;
+        /** Zone remplacée : ses clics en retard sont bloqués sans compter. */
+        volatile int oldHitboxId = Integer.MIN_VALUE;
         final Look look;
+        /** Cookie mobile : place de l'objet, clics qui comptent à cette place, changement de place demandé. */
+        Places.Offset offset = Places.Offset.ZERO;
+        int hits;
+        boolean jumpRequested;
         /** Tick du prochain envoi de pose. */
         int nextFrame;
         /** 1 entre le sommet du bond et le retour au repos. */
@@ -90,9 +114,18 @@ public final class ClickerDisplay {
             nextFrame = now;
             return this;
         }
+
+        /** Le même objet à la même place, sous un autre aspect (changement de design). */
+        Shown restyled(int newEntityId, Look newLook, int now) {
+            Shown copy = new Shown(newEntityId, hitboxId, newLook);
+            copy.oldHitboxId = oldHitboxId;
+            copy.offset = offset;
+            copy.hits = hits;
+            return copy.starting(now);
+        }
     }
 
-    private record Click(View view, Clickers.Spot spot, boolean left) {
+    private record Click(View view, Clickers.Spot spot, int hitboxId, boolean left) {
     }
 
     public ClickerDisplay(SHCookieClicker plugin) {
@@ -120,10 +153,55 @@ public final class ClickerDisplay {
         clicks.clear();
     }
 
-    /** Rechargement de la configuration : tout est remonté avec les nouveaux réglages. */
+    /** Rechargement de la configuration ou des clickers : tout est remonté avec les nouveaux réglages. */
     public void reload() {
+        Moving current = moving;
+        if (current != null) {
+            moving = new Moving(current.until(), places());
+        }
         clearAll();
-        tick();
+        int now = Bukkit.getCurrentTick();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            update(player, now);
+        }
+    }
+
+    // ---- cookie mobile (fil principal)
+
+    /** Cookie mobile pendant {@code seconds} secondes, ou jusqu'à {@link #stopMoving()}. */
+    public void startMoving(long seconds) {
+        moving = new Moving(System.currentTimeMillis() + seconds * 1000L, places());
+        reload();
+    }
+
+    /** Fin du cookie mobile ; faux s'il n'était pas en cours. */
+    public boolean stopMoving() {
+        if (moving == null) {
+            return false;
+        }
+        moving = null;
+        reload();
+        return true;
+    }
+
+    /** Places possibles autour de chaque clicker, d'après les blocs du monde. */
+    private Map<Clickers.Spot, List<Places.Offset>> places() {
+        MovingCookie settings = plugin.settings().movingCookie;
+        Appearance look = plugin.settings().appearance;
+        Map<Clickers.Spot, List<Places.Offset>> places = new HashMap<>();
+        for (Clickers.Spot spot : plugin.clickers().all()) {
+            World world = Bukkit.getWorld(spot.world());
+            if (world == null) {
+                continue;
+            }
+            List<Places.Offset> around = Places.around(settings, spot.x() + 0.5, spot.y() + 0.5 + look.height(), spot.z() + 0.5,
+                    (x, y, z) -> !world.getBlockAt(x, y, z).isPassable());
+            if (around.isEmpty()) {
+                plugin.getLogger().warning("Cookie mobile : aucune place libre autour du clicker " + spot.number() + ", il reste à sa place.");
+            }
+            places.put(spot, List.copyOf(around));
+        }
+        return places;
     }
 
     private void clearAll() {
@@ -149,24 +227,40 @@ public final class ClickerDisplay {
         plugin.sync(() -> update(player, Bukkit.getCurrentTick()));
     }
 
-    /** Un clic qui compte sur ce clicker : l'objet du joueur fait un bond. */
+    /**
+     * Un clic qui compte sur ce clicker (fil principal) : l'objet du joueur fait un bond ; en cookie mobile, il change
+     * de place tous les « clics-par-place » clics.
+     */
     public void pop(Player player, Clickers.Spot spot) {
         View view = views.get(player.getUniqueId());
         Shown shown = view == null ? null : view.shown.get(spot);
-        if (shown != null) {
-            int now = Bukkit.getCurrentTick();
-            if ((long) now - shown.popRequested >= POP_GAP_TICKS) {
-                shown.popRequested = now;
-            }
+        if (shown == null) {
+            return;
+        }
+        int now = Bukkit.getCurrentTick();
+        if ((long) now - shown.popRequested >= POP_GAP_TICKS) {
+            shown.popRequested = now;
+        }
+        if (moving != null && ++shown.hits >= plugin.settings().movingCookie.clicksPerPlace()) {
+            shown.hits = 0;
+            shown.jumpRequested = true;
         }
     }
 
     // ---- clics (fil réseau)
 
-    /** Vrai si cette entité est la zone de clic d'un clicker de ce joueur. */
+    /** Vrai si cette entité est la zone de clic (actuelle ou tout juste remplacée) d'un clicker de ce joueur. */
     boolean owns(UUID uuid, int entityId) {
         View view = views.get(uuid);
-        return view != null && spotOf(view, entityId) != null;
+        if (view == null) {
+            return false;
+        }
+        for (Shown shown : view.shown.values()) {
+            if (shown.hitboxId == entityId || shown.oldHitboxId == entityId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Clickers.Spot spotOf(View view, int hitboxId) {
@@ -196,7 +290,7 @@ public final class ClickerDisplay {
             view.queued.decrementAndGet();
             return;
         }
-        clicks.add(new Click(view, spot, left));
+        clicks.add(new Click(view, spot, hitboxId, left));
     }
 
     private void playClicks() {
@@ -204,6 +298,11 @@ public final class ClickerDisplay {
             click.view.queued.decrementAndGet();
             Player player = click.view.player;
             if (!player.isOnline() || views.get(player.getUniqueId()) != click.view) {
+                continue;
+            }
+            Shown shown = click.view.shown.get(click.spot);
+            if (shown == null || shown.hitboxId != click.hitboxId) {
+                // Zone remplacée depuis : le clic visait l'ancienne place du cookie mobile
                 continue;
             }
             try {
@@ -221,6 +320,10 @@ public final class ClickerDisplay {
     // ---- minuteur
 
     private void tick() {
+        Moving current = moving;
+        if (current != null && System.currentTimeMillis() >= current.until()) {
+            stopMoving();
+        }
         Appearance look = plugin.settings().appearance;
         int now = Bukkit.getCurrentTick();
         playClicks();
@@ -230,8 +333,8 @@ public final class ClickerDisplay {
             }
         }
         for (View view : views.values()) {
-            for (Shown shown : view.shown.values()) {
-                animate(view.player, shown, look, now);
+            for (Map.Entry<Clickers.Spot, Shown> entry : view.shown.entrySet()) {
+                animate(view.player, entry.getKey(), entry.getValue(), look, now);
             }
         }
     }
@@ -284,32 +387,56 @@ public final class ClickerDisplay {
                 } else if (!shown.look.key().equals(wanted.key())) {
                     // Même zone de clic, un autre objet
                     ClickerPackets.destroy(player, shown.entityId);
-                    view.shown.put(spot, new Shown(spawnObject(player, spot, wanted, look, now), shown.hitboxId, wanted).starting(now));
+                    view.shown.put(spot, shown.restyled(spawnObject(player, spot, wanted, look, shown.offset, now), wanted, now));
                 }
             } else if (distance <= (double) radius * radius) {
+                Moving current = moving;
+                Places.Offset offset = current == null ? Places.Offset.ZERO
+                        : Places.next(current.at(spot), Places.Offset.ZERO, 0, ThreadLocalRandom.current());
                 int hitbox = ClickerPackets.newEntityId();
-                double centerY = spot.y() + 0.5 + look.height();
-                ClickerPackets.spawnHitbox(player, hitbox, spot.x() + 0.5, centerY - look.hitHeight() / 2.0, spot.z() + 0.5,
-                        look.hitWidth(), look.hitHeight());
-                view.shown.put(spot, new Shown(spawnObject(player, spot, wanted, look, now), hitbox, wanted).starting(now));
+                spawnHitbox(player, spot, hitbox, offset, look, current != null);
+                Shown fresh = new Shown(spawnObject(player, spot, wanted, look, offset, now), hitbox, wanted);
+                fresh.offset = offset;
+                view.shown.put(spot, fresh.starting(now));
             }
         }
     }
 
     /** Montre l'objet au joueur, à la pose du moment ; rend son numéro d'entité. */
-    private int spawnObject(Player player, Clickers.Spot spot, Look wanted, Appearance look, int now) {
+    private int spawnObject(Player player, Clickers.Spot spot, Look wanted, Appearance look, Places.Offset offset, int now) {
         int id = ClickerPackets.newEntityId();
         ClickerPackets.spawn(player, id, spot.x() + 0.5, spot.y() + 0.5 + look.height(), spot.z() + 0.5, wanted,
-                Pose.at(look, wanted.isBlock(), now, 0));
+                Pose.at(look, wanted.isBlock(), now, 0).shifted(offset));
         return id;
     }
 
-    /** Envoie la prochaine pose : le bond demandé d'abord, puis son retour au repos, sinon le repos. */
-    private void animate(Player player, Shown shown, Appearance look, int now) {
+    /** Zone de clic centrée sur l'objet : la taille du cookie mobile s'il est en cours, sinon celle de l'apparence. */
+    private void spawnHitbox(Player player, Clickers.Spot spot, int id, Places.Offset offset, Appearance look, boolean small) {
+        float width = small ? plugin.settings().movingCookie.hitSize() : look.hitWidth();
+        float height = small ? plugin.settings().movingCookie.hitSize() : look.hitHeight();
+        double centerY = spot.y() + 0.5 + look.height() + offset.y();
+        ClickerPackets.spawnHitbox(player, id, spot.x() + 0.5 + offset.x(), centerY - height / 2.0, spot.z() + 0.5 + offset.z(),
+                width, height);
+    }
+
+    /**
+     * Envoie la prochaine pose : le changement de place demandé (cookie mobile), sinon le bond demandé puis son retour
+     * au repos, sinon le repos.
+     */
+    private void animate(Player player, Clickers.Spot spot, Shown shown, Appearance look, int now) {
+        if (shown.jumpRequested) {
+            shown.jumpRequested = false;
+            Moving current = moving;
+            if (current != null) {
+                jump(player, spot, shown, current, look, now);
+                return;
+            }
+        }
         int requested = shown.popRequested;
         if (requested != shown.popPlayed) {
             shown.popPlayed = requested;
-            ClickerPackets.move(player, shown.entityId, Pose.at(look, shown.look.isBlock(), now + POP_UP_TICKS, 1), POP_UP_TICKS);
+            ClickerPackets.move(player, shown.entityId,
+                    Pose.at(look, shown.look.isBlock(), now + POP_UP_TICKS, 1).shifted(shown.offset), POP_UP_TICKS);
             shown.phase = 1;
             shown.nextFrame = now + POP_UP_TICKS;
             return;
@@ -318,7 +445,24 @@ public final class ClickerDisplay {
             return;
         }
         int ticks = shown.phase == 1 ? POP_DOWN_TICKS : look.stepTicks();
-        ClickerPackets.move(player, shown.entityId, Pose.at(look, shown.look.isBlock(), now + ticks, 0), ticks);
+        ClickerPackets.move(player, shown.entityId, Pose.at(look, shown.look.isBlock(), now + ticks, 0).shifted(shown.offset), ticks);
+        shown.phase = 0;
+        shown.nextFrame = now + ticks;
+    }
+
+    /** Cookie mobile : l'objet glisse vers une autre place, une zone de clic neuve l'y attend. */
+    private void jump(Player player, Clickers.Spot spot, Shown shown, Moving current, Appearance look, int now) {
+        MovingCookie settings = plugin.settings().movingCookie;
+        shown.offset = Places.next(current.at(spot), shown.offset, settings.minDistance(), ThreadLocalRandom.current());
+        int old = shown.hitboxId;
+        int fresh = ClickerPackets.newEntityId();
+        spawnHitbox(player, spot, fresh, shown.offset, look, true);
+        shown.oldHitboxId = old;
+        shown.hitboxId = fresh;
+        ClickerPackets.destroy(player, old);
+        int ticks = settings.slideTicks();
+        ClickerPackets.move(player, shown.entityId, Pose.at(look, shown.look.isBlock(), now + ticks, 0).shifted(shown.offset), ticks);
+        shown.popPlayed = shown.popRequested;
         shown.phase = 0;
         shown.nextFrame = now + ticks;
     }

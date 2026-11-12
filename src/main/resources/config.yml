@@ -21,6 +21,8 @@
 #    /shcookieclicker remove clicker <n>   Retire le clicker n.
 #    /shcookieclicker modify <joueur> <add|set|remove> <COOKIES|PER_CLICK|CLICKER_CLICKS> <n>
 #    /shcookieclicker reset <joueur>       Remet à zéro la progression d'un joueur.
+#    /shcookieclicker moving <secondes|off>  Cookie mobile pendant ce nombre de secondes (tournois),
+#                                          off : arrêt. Il ne survit pas à un rechargement du plugin.
 #    /shcookieclicker import               Mode réseau : copie la progression du fichier SQLite
 #                                          dans la base du réseau, sans rien écraser.
 #    L'ancien nom /cookieclicker reste accepté (alias de /shcookieclicker).
@@ -29,7 +31,7 @@
 #    shcookieclicker.use             /cookies (tout le monde)
 #    shcookieclicker.premium         Boutique VipElite (op)
 #    shcookieclicker.admin           Toutes les sous-commandes de /shcookieclicker (op)
-#    shcookieclicker.admin.<sous-commande>  reload, list, set, remove, modify, reset, import (op)
+#    shcookieclicker.admin.<sous-commande>  reload, list, set, remove, modify, reset, moving, import (op)
 #
 #  Placeholders (nombres au format 1,234,567) :
 #    %cookieclicker_cookies%        cookies du joueur
@@ -136,6 +138,24 @@ apparence:
     # Au sommet du bond : taille en plus (0.2 = 20 %) et hauteur en plus, en blocs.
     gonflement: 0.2
     bond: 0.12
+
+# Cookie mobile (/shcookieclicker moving), pour les tournois : la zone de clic rétrécit et l'objet de chaque joueur
+# change de place après quelques clics qui comptent. Un autoclic, qui clique toujours au même endroit, ne touche plus
+# rien : il faut viser. Un clic envoyé avant que le joueur ait vu la nouvelle place ne compte pas.
+cookie-mobile:
+  # Clics qui comptent avant que l'objet change de place.
+  clics-par-place: 3
+  # Zone de clic, centrée sur l'objet : largeur et hauteur, en blocs.
+  zone-de-clic: 0.8
+  # Places possibles autour de la place habituelle, en blocs (par quart de bloc) : de chaque côté, en dessous et
+  # au-dessus. Une place où la zone de clic toucherait un bloc plein est écartée.
+  ecart-cote: 1.0
+  ecart-bas: 0.25
+  ecart-haut: 0.75
+  # Distance minimale entre deux places de suite, en blocs.
+  distance-minimale: 1.0
+  # Durée du déplacement d'une place à l'autre, en ticks.
+  deplacement-ticks: 2
 
 affichage:
   # Séparateur des milliers dans les textes du plugin (1 234 567). Les placeholders gardent la virgule.
