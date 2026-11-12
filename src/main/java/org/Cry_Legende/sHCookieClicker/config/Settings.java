@@ -40,6 +40,7 @@ public final class Settings {
     public final int rankingSeconds;
     public final boolean clickerHologram;
     public final boolean gainHolograms;
+    public final Appearance appearance;
     public final String thousandsSeparator;
     public final SoundSet sounds;
 
@@ -84,6 +85,7 @@ public final class Settings {
         rankingSeconds = Math.max(5, file.getInt("classement.rafraichissement-secondes", 30));
         clickerHologram = file.getBoolean("hologrammes.clicker", false);
         gainHolograms = file.getBoolean("hologrammes.gains", true);
+        appearance = Appearance.parse(file.getConfigurationSection("apparence"), warn);
         thousandsSeparator = file.getString("affichage.separateur-milliers", " ");
         sounds = SoundSet.parse(file.getConfigurationSection("sons"), warn);
 

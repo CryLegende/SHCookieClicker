@@ -127,7 +127,7 @@ public final class DesignMenu extends Menu {
                 profile.select(kind, 0);
                 plugin.settings().sounds.play(player, SoundSet.Action.DESIGN_RETIRE);
                 if (kind == ShopKind.BLOCK_DESIGN) {
-                    plugin.look().reset(player);
+                    plugin.display().refresh(player);
                 }
                 render();
             } else if (!selected && type.isLeftClick()) {
@@ -151,7 +151,7 @@ public final class DesignMenu extends Menu {
     private void selected(SoundSet.Action sound) {
         plugin.settings().sounds.play(player, sound);
         if (kind == ShopKind.BLOCK_DESIGN) {
-            plugin.look().show(player);
+            plugin.display().refresh(player);
         }
         render();
     }

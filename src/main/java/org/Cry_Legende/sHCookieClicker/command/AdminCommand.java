@@ -258,7 +258,6 @@ public final class AdminCommand implements TabExecutor {
             Player player = Bukkit.getPlayer(profile.uuid());
             if (player != null) {
                 plugin.particles().stop(player.getUniqueId());
-                plugin.look().reset(player);
             }
             afterChange(profile);
             plugin.messages().send(sender, "administration.remis-a-zero", "joueur", profile.name());

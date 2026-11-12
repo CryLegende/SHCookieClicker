@@ -44,8 +44,9 @@
 #                              que les cookies le permettent).
 #    designs                   s'achètent une fois, puis se sélectionnent (clic gauche) ou se
 #                              retirent (clic droit sur le design sélectionné).
-#      blocs    bloc vu à la place du clicker. TETE_JOUEUR : la tête du joueur (skin de
-#               SHSkins) ; PLAYER_HEAD avec texture : une tête à texture.
+#      blocs    bloc ou tête qui flotte au-dessus du clicker, à la place de la tête de cookie
+#               (apparence). TETE_JOUEUR : la tête du joueur (skin de SHSkins) ;
+#               PLAYER_HEAD avec texture : une tête à texture.
 #      effets   animation (SPIRALE, ANNEAUX, ONDE, ETOILE, TOURBILLON), particule,
 #               particule-secondaire (TOURBILLON), couleur '#RRGGBB' (poussière colorée à la
 #               place de la particule). Effet vu du seul joueur, au plus un à la fois.
@@ -102,6 +103,34 @@ hologrammes:
   clicker: false
   # Gain qui s'élève au-dessus d'un cookie ramassé pendant une explosion.
   gains: true
+
+# L'objet qui flotte au-dessus de chaque clicker : une tête de cookie, ou le bloc ou la tête choisis dans les
+# designs. Il est envoyé en paquets à chaque joueur, qui voit le sien (le serveur n'en garde aucune entité) ;
+# il demande le plugin packetevents. Il tourne sur lui-même en montant et en descendant doucement, et fait un
+# bond à chaque clic qui compte, vu du seul joueur qui clique.
+apparence:
+  actif: true
+  # Tête affichée quand le joueur n'a choisi aucun design : adresse textures.minecraft.net ou identifiant de texture.
+  tete-par-defaut: http://textures.minecraft.net/texture/605ef8819fb6a92148249ff48c3914e92c273e7874523ff7930b9f5cc93ceaae
+  # Distance d'affichage, en blocs (jamais plus que la distance de vue du joueur).
+  rayon: 40
+  # Hauteur du centre de l'objet au-dessus du centre du bloc du clicker, en blocs.
+  hauteur: 0.5
+  # Tailles : 1 pour une tête, c'est la taille d'une tête de mannequin ; en blocs pour un bloc.
+  taille-tete: 1.0
+  taille-bloc: 0.75
+  repos:
+    # Durée d'un tour sur lui-même, en secondes.
+    tour-secondes: 8
+    # Amplitude de la montée et de la descente, en blocs, et durée de l'aller-retour, en secondes.
+    flottement: 0.08
+    flottement-secondes: 3
+    # Un envoi tous les N ticks et par joueur ; le client lisse le mouvement entre deux envois.
+    fluidite-ticks: 5
+  coup:
+    # Au sommet du bond : taille en plus (0.2 = 20 %) et hauteur en plus, en blocs.
+    gonflement: 0.2
+    bond: 0.12
 
 affichage:
   # Séparateur des milliers dans les textes du plugin (1 234 567). Les placeholders gardent la virgule.
@@ -203,11 +232,6 @@ designs:
       nom: Cactus
       bloc: CACTUS
       prix: 500000
-    6:
-      nom: Tête de cookie
-      bloc: PLAYER_HEAD
-      texture: http://textures.minecraft.net/texture/605ef8819fb6a92148249ff48c3914e92c273e7874523ff7930b9f5cc93ceaae
-      prix: 600000
     7:
       nom: Votre tête
       bloc: TETE_JOUEUR

@@ -22,7 +22,6 @@ public final class Session {
     long deniedAt;
     long menuClickAt;
     long effectReadyAt;
-    boolean designSent;
     /** Numéro du clicker en cours de pose (/shcookieclicker set clicker), 0 sinon. */
     int placing;
 

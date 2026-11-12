@@ -1,6 +1,5 @@
 package org.Cry_Legende.sHCookieClicker.game;
 
-import io.papermc.paper.event.packet.PlayerChunkLoadEvent;
 import org.Cry_Legende.sHCookieClicker.SHCookieClicker;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -22,8 +21,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * Événements du clicker. Ils sont lus même annulés (la zone du spawn interdit de casser et d'utiliser les blocs),
@@ -61,8 +60,7 @@ public final class ClickerListener implements Listener {
         if (action == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             if (event.getHand() == EquipmentSlot.HAND) {
-                ItemStack item = event.getItem();
-                plugin.clicks().rightClick(player, item != null && item.getType().isBlock() && !item.getType().isAir());
+                plugin.clicks().rightClick(player);
             }
         }
     }
@@ -117,17 +115,6 @@ public final class ClickerListener implements Listener {
         }
     }
 
-    // Le jeu oublie le bloc du design quand il reçoit à nouveau le tronçon du clicker
-    @EventHandler
-    public void onChunkSent(PlayerChunkLoadEvent event) {
-        if (plugin.clickers().isClickerChunk(event.getWorld(), event.getChunk().getX(), event.getChunk().getZ())) {
-            Session session = plugin.sessions().get(event.getPlayer());
-            if (session != null && session.loaded) {
-                plugin.look().show(event.getPlayer());
-            }
-        }
-    }
-
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         plugin.clicks().join(event.getPlayer());
@@ -137,6 +124,7 @@ public final class ClickerListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onQuit(PlayerQuitEvent event) {
         lastLeftTick.remove(event.getPlayer().getUniqueId());
+        plugin.display().forget(event.getPlayer());
         plugin.clicks().leave(event.getPlayer(), true);
     }
 
@@ -145,8 +133,15 @@ public final class ClickerListener implements Listener {
         Session session = plugin.sessions().get(event.getPlayer());
         if (session != null) {
             session.moved(System.currentTimeMillis());
-            session.designSent = false;
         }
+        // Le client a oublié les entités de l'ancien monde
+        plugin.display().forget(event.getPlayer());
+    }
+
+    // Réapparition : le client reçoit un nouveau monde, sans les entités d'avant
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onRespawn(PlayerRespawnEvent event) {
+        plugin.display().forget(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

@@ -38,13 +38,11 @@ public final class Clickers {
 
     private final List<Spot> spots;
     private final Map<String, Set<Long>> blocks = new HashMap<>();
-    private final Map<String, Set<Long>> chunks = new HashMap<>();
 
     private Clickers(List<Spot> spots) {
         this.spots = Collections.unmodifiableList(spots);
         for (Spot spot : spots) {
             blocks.computeIfAbsent(spot.world(), key -> new HashSet<>()).add(spot.key());
-            chunks.computeIfAbsent(spot.world(), key -> new HashSet<>()).add(chunkKey(spot.x() >> 4, spot.z() >> 4));
         }
     }
 
@@ -102,11 +100,6 @@ public final class Clickers {
         return blocks.containsKey(world.getName());
     }
 
-    public boolean isClickerChunk(World world, int chunkX, int chunkZ) {
-        Set<Long> keys = chunks.get(world.getName());
-        return keys != null && keys.contains(chunkKey(chunkX, chunkZ));
-    }
-
     public Spot find(int number) {
         for (Spot spot : spots) {
             if (spot.number() == number) {
@@ -131,10 +124,6 @@ public final class Clickers {
             }
         }
         return false;
-    }
-
-    private static long chunkKey(int x, int z) {
-        return ((long) z << 32) | (x & 0xFFFFFFFFL);
     }
 
     /** Ajoute ou retire un clicker dans locations.yml (le reste du fichier n'est pas touché). */

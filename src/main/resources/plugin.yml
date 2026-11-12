@@ -7,6 +7,7 @@ description: "Cookie Clicker de SkyHand : clicker du spawn, améliorations, desi
 softdepend:
   - Multiverse-Core
   - PlaceholderAPI
+  - packetevents
   - SHNetwork
   - SHSkins
 

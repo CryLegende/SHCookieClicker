@@ -47,11 +47,6 @@ public final class ClickService {
                 plugin.profiles().rename(known, player.getName());
             }
             session.loaded = true;
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (player.isOnline()) {
-                    plugin.look().show(player);
-                }
-            }, 20);
             return;
         }
         // Mode réseau : le profil est relu en base une fois que l'autre serveur a fini de l'écrire
@@ -63,7 +58,6 @@ public final class ClickService {
             plugin.sync(() -> {
                 if (player.isOnline() && plugin.sessions().get(uuid) == session) {
                     session.loaded = true;
-                    plugin.look().show(player);
                 }
             });
         });
@@ -112,10 +106,6 @@ public final class ClickService {
         }
         Settings settings = plugin.settings();
         long now = System.currentTimeMillis();
-        if (!session.designSent) {
-            session.designSent = true;
-            plugin.look().show(player);
-        }
         boolean tooFast = session.fill(now, settings.maxClicksPerSecond);
         if (session.idle(now, settings.afkMillis)) {
             plugin.feedback().denied(player, session, "barre.afk");
@@ -131,6 +121,7 @@ public final class ClickService {
         profile.click(golden ? settings.goldenMultiplier : 1);
         plugin.ranking().markChanged();
         settings.sounds.play(player, SoundSet.Action.CLIC);
+        plugin.display().pop(player, block);
         if (golden) {
             return;
         }
@@ -174,15 +165,11 @@ public final class ClickService {
         player.showTitle(Title.title(Text.of(messages.raw(titleKey)), Text.of(messages.raw(subtitleKey)), TITLE_TIMES));
     }
 
-    /** Clic droit sur un clicker : le menu. Un bloc en main a pu s'afficher côté client, le design est renvoyé. */
-    public void rightClick(Player player, boolean blockInHand) {
+    /** Clic droit sur un clicker : le menu. */
+    public void rightClick(Player player) {
         Session session = plugin.sessions().get(player);
         if (session == null || !session.loaded) {
             return;
-        }
-        if (blockInHand || !session.designSent) {
-            session.designSent = true;
-            plugin.look().show(player);
         }
         plugin.settings().sounds.play(player, SoundSet.Action.OUVERTURE);
         new HomeMenu(plugin, player).open();
@@ -223,9 +210,6 @@ public final class ClickService {
             }
             plugin.reloadClickers();
             plugin.holograms().restart();
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                plugin.look().show(online);
-            }
             messages.send(player, "clickers.ajoute", "numero", String.valueOf(number));
         });
         return true;

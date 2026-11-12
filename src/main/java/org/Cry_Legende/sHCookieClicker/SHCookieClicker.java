@@ -15,7 +15,7 @@ import org.Cry_Legende.sHCookieClicker.data.Ranking;
 import org.Cry_Legende.sHCookieClicker.data.Saver;
 import org.Cry_Legende.sHCookieClicker.game.ClickService;
 import org.Cry_Legende.sHCookieClicker.game.ClickerListener;
-import org.Cry_Legende.sHCookieClicker.game.ClickerLook;
+import org.Cry_Legende.sHCookieClicker.game.ClickerDisplay;
 import org.Cry_Legende.sHCookieClicker.game.Clickers;
 import org.Cry_Legende.sHCookieClicker.game.Explosions;
 import org.Cry_Legende.sHCookieClicker.game.Feedback;
@@ -59,7 +59,7 @@ public final class SHCookieClicker extends JavaPlugin {
     private NetworkMode network;
     private final Sessions sessions = new Sessions();
     private Feedback feedback;
-    private ClickerLook look;
+    private ClickerDisplay display;
     private ParticleAnimator particles;
     private Explosions explosions;
     private Holograms holograms;
@@ -87,7 +87,11 @@ public final class SHCookieClicker extends JavaPlugin {
         rankingTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, ranking::refresh, settings.rankingSeconds * 20L, settings.rankingSeconds * 20L);
 
         feedback = new Feedback(this);
-        look = new ClickerLook(this);
+        boolean packets = Bukkit.getPluginManager().isPluginEnabled("packetevents");
+        if (!packets && settings.appearance.enabled()) {
+            getLogger().warning("packetevents absent : le clicker n'a pas d'objet qui flotte au-dessus de lui.");
+        }
+        display = new ClickerDisplay(this, packets);
         particles = new ParticleAnimator();
         explosions = new Explosions(this);
         holograms = new Holograms(this);
@@ -105,6 +109,7 @@ public final class SHCookieClicker extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, feedback::tick, 2, 2);
         Bukkit.getScheduler().runTaskTimer(this, particles::tick, 1, 1);
         holograms.start();
+        display.start();
         ready = true;
         // Rechargement à chaud : les joueurs déjà là reprennent une session
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -130,6 +135,9 @@ public final class SHCookieClicker extends JavaPlugin {
         }
         if (explosions != null) {
             explosions.clear();
+        }
+        if (display != null) {
+            display.stop();
         }
         if (holograms != null) {
             holograms.stop();
@@ -320,8 +328,8 @@ public final class SHCookieClicker extends JavaPlugin {
                 if (player.getOpenInventory().getTopInventory().getHolder() instanceof Menu) {
                     player.closeInventory();
                 }
-                look.show(player);
             }
+            display.reload();
             holograms.restart();
             ranking.markChanged();
         }
@@ -403,8 +411,8 @@ public final class SHCookieClicker extends JavaPlugin {
         return feedback;
     }
 
-    public ClickerLook look() {
-        return look;
+    public ClickerDisplay display() {
+        return display;
     }
 
     public ParticleAnimator particles() {

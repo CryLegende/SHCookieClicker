@@ -6,7 +6,7 @@
 
     <groupId>org.Cry_Legende</groupId>
     <artifactId>SHCookieClicker</artifactId>
-    <version>2.0</version>
+    <version>2.1</version>
     <packaging>jar</packaging>
 
     <name>SHCookieClicker</name>
@@ -91,6 +91,10 @@
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/releases/</url>
         </repository>
+        <repository>
+            <id>codemc-releases</id>
+            <url>https://repo.codemc.io/repository/maven-releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -116,6 +120,13 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>2.0.16</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Facultatif à l'exécution (softdepend) : sans lui, le clicker n'a pas d'objet qui flotte au-dessus de lui -->
+        <dependency>
+            <groupId>com.github.retrooper</groupId>
+            <artifactId>packetevents-spigot</artifactId>
+            <version>2.14.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- Facultatif à l'exécution (softdepend) : sans lui, la progression reste dans la base du serveur -->

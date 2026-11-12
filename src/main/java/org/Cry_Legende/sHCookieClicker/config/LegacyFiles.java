@@ -196,6 +196,10 @@ public final class LegacyFiles {
             String p = id + ".";
             String block = section.getString(p + "block_type", section.getString(p + "item_type", "STONE"));
             String texture = section.getString(p + "skull_texture", "");
+            // La tête de cookie est maintenant ce que voit tout joueur sans design : elle n'est plus à vendre
+            if (texture != null && texture.trim().equals(Appearance.DEFAULT_TEXTURE)) {
+                continue;
+            }
             result.put(p + "nom", section.getString(p + "display_name", "?"));
             if (block.equalsIgnoreCase("REAL_PLAYER_HEAD")) {
                 result.put(p + "bloc", "TETE_JOUEUR");
