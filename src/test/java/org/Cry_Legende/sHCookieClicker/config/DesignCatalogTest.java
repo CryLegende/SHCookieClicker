@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Catalogue des blocs à vendre du config.yml du jar : numéros gardés, prix qui montent, têtes valides. */
+/** Catalogue des blocs à vendre du config.yml du jar : numéros gardés, les plus chers en haut, têtes valides. */
 class DesignCatalogTest {
 
     private static ConfigurationSection blocks() throws Exception {
@@ -24,27 +24,21 @@ class DesignCatalogTest {
     }
 
     @Test
-    void ownedDesignsKeepTheirNumber() throws Exception {
+    void ownedDesignsKeepTheirNumberAndAreTheRarest() throws Exception {
         ConfigurationSection blocks = blocks();
         // Acheté par un joueur : le numéro est la clé de la base, il ne change pas de sens
         assertEquals("DRAGON_EGG", blocks.getString("4.bloc"));
-        assertEquals(400000, blocks.getLong("4.prix"));
         assertEquals("TETE_JOUEUR", blocks.getString("7.bloc"));
-        assertEquals(700000, blocks.getLong("7.prix"));
+        // L'œuf de dragon et la tête du joueur sont les deux designs les plus chers
+        List<String> byPrice = new ArrayList<>(blocks.getKeys(false));
+        byPrice.sort((x, y) -> Long.compare(blocks.getLong(y + ".prix"), blocks.getLong(x + ".prix")));
+        assertEquals(List.of("4", "7"), byPrice.subList(0, 2).stream().sorted().toList());
+        assertTrue(blocks.getLong("4.prix") > blocks.getLong(byPrice.get(2) + ".prix"));
     }
 
     @Test
-    void menuOrderIsPriceOrder() throws Exception {
-        // Le menu range les designs par numéro : les prix doivent monter avec lui
-        ConfigurationSection blocks = blocks();
-        List<Integer> ids = new ArrayList<>(blocks.getKeys(false).stream().map(Integer::parseInt).sorted().toList());
-        long previous = 0;
-        for (int id : ids) {
-            long price = blocks.getLong(id + ".prix");
-            assertTrue(price > previous, "design " + id + " : " + price + " après " + previous);
-            previous = price;
-        }
-        assertTrue(ids.size() <= 7, "une page du menu");
+    void oneMenuPage() throws Exception {
+        assertTrue(blocks().getKeys(false).size() <= 7, "une page du menu");
     }
 
     @Test

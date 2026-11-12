@@ -91,8 +91,8 @@ public final class Settings {
 
         upgrades = upgrades(section(file, jar, "boutique.ameliorations"), "boutique.ameliorations", warn);
         premium = upgrades(section(file, jar, "boutique.vipelite"), "boutique.vipelite", warn);
-        blocks = blocks(section(file, jar, "designs.blocs"), warn);
-        effects = effects(section(file, jar, "designs.effets"), warn);
+        blocks = byPrice(blocks(section(file, jar, "designs.blocs"), warn), Designs.Block::price);
+        effects = byPrice(effects(section(file, jar, "designs.effets"), warn), Designs.Effect::price);
 
         networkEnabled = file.getBoolean("reseau.actif", true);
         networkWaitSeconds = Math.max(1, file.getInt("reseau.attente-max-secondes", 10));
@@ -114,6 +114,16 @@ public final class Settings {
             return file.getConfigurationSection(path);
         }
         return jar.getConfigurationSection(path);
+    }
+
+    /** Les designs dans l'ordre de leur prix, à prix égal dans l'ordre de leur numéro : c'est l'ordre du menu. */
+    static <T> Map<Integer, T> byPrice(Map<Integer, T> designs, java.util.function.ToLongFunction<T> price) {
+        List<Map.Entry<Integer, T>> entries = new ArrayList<>(designs.entrySet());
+        entries.sort(java.util.Comparator.<Map.Entry<Integer, T>>comparingLong(entry -> price.applyAsLong(entry.getValue()))
+                .thenComparing(Map.Entry::getKey));
+        Map<Integer, T> sorted = new LinkedHashMap<>();
+        entries.forEach(entry -> sorted.put(entry.getKey(), entry.getValue()));
+        return Collections.unmodifiableMap(sorted);
     }
 
     private static List<Integer> ids(ConfigurationSection section, String path, List<String> warn) {

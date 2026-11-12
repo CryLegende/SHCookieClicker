@@ -119,4 +119,4 @@ SHSkins et SHNetwork doivent être dans le dépôt Maven local (`mvn install` da
 Le test `ServerDatabaseTest` rejoue la reprise et une écriture complète sur la copie d'une vraie base :
 `mvn test -Dcookieclicker.db=chemin/vers/cookieclicker.db` (jamais versionnée).
 
-packetevents (2.14) vient du dépôt CodeMC. Le jar est `target/SHCookieClicker-2.2.jar`.
+packetevents (2.14) vient du dépôt CodeMC. Le jar est `target/SHCookieClicker-2.3.jar`.

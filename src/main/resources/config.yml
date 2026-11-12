@@ -44,7 +44,7 @@
 #                              que les cookies le permettent).
 #    designs                   s'achètent une fois, puis se sélectionnent (clic gauche) ou se
 #                              retirent (clic droit sur le design sélectionné). Le menu les range
-#                              dans l'ordre de leur numéro.
+#                              par prix, du moins cher au plus cher.
 #      blocs    bloc ou tête qui flotte au-dessus du clicker, à la place de la tête de cookie
 #               (apparence). TETE_JOUEUR : la tête du joueur (skin de SHSkins) ;
 #               PLAYER_HEAD avec texture : une tête à texture.
@@ -221,34 +221,34 @@ designs:
       nom: Cristal d'améthyste
       bloc: AMETHYST_CLUSTER
       prix: 250000
-    4:
-      nom: Oeuf de dragon
-      bloc: DRAGON_EGG
-      prix: 400000
-    7:
-      nom: Votre tête
-      bloc: TETE_JOUEUR
-      prix: 700000
     8:
       nom: Coffre doré
       bloc: PLAYER_HEAD
       texture: http://textures.minecraft.net/texture/7406e45318e9a4a6bfe132f202fe3ceac15d11eaedbef1eb06a376db433090a8
-      prix: 5000000
+      prix: 2500000
     9:
       nom: Cœur de l'océan
       bloc: PLAYER_HEAD
       texture: http://textures.minecraft.net/texture/5113ee610841ded215acd2b4caaeef87dfd6e3d4768e7ab4e19eb76b3d8121cf
-      prix: 50000000
+      prix: 25000000
     10:
-      nom: Coffre de diamants
+      nom: Balise
       bloc: PLAYER_HEAD
-      texture: http://textures.minecraft.net/texture/9714516e6565b812ff5b39ea39cd287afec8fcc06d8f30521ccd8f1b4cbfdc6b
-      prix: 500000000
+      texture: http://textures.minecraft.net/texture/4a2648a9e53613f0ab1266b72918f40788f84e160a52348cd67138410262f39f
+      prix: 100000000
     11:
-      nom: Étoile du Nether
+      nom: Pomme d'or enchantée
       bloc: PLAYER_HEAD
-      texture: http://textures.minecraft.net/texture/57c66f5a4b408005b336da6676e8f6a2a67eea315fb7e91360acc047802fa320
-      prix: 5000000000
+      texture: http://textures.minecraft.net/texture/dfdca40803ab4956237033a9fca0dda0a50c56b186982aab3b230d2da6a8998b
+      prix: 500000000
+    4:
+      nom: Oeuf de dragon
+      bloc: DRAGON_EGG
+      prix: 2000000000
+    7:
+      nom: Votre tête
+      bloc: TETE_JOUEUR
+      prix: 10000000000
   effets:
     1:
       nom: Racines grandissantes
