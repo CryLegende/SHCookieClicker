@@ -7,9 +7,6 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-
 public class PlaceholderListener extends PlaceholderExpansion {
     private final CookieClicker plugin;
 
@@ -39,10 +36,10 @@ public class PlaceholderListener extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String identifier) {
-        ClickerStatsProfile clickerStatsProfile = plugin.getClickerPlayerManager().getStatsProfile(player.getUniqueId());
-        if (clickerStatsProfile == null) {
+        if (player == null || plugin.getClickerPlayerManager() == null) {
             return "N/A";
         }
+        ClickerStatsProfile clickerStatsProfile = plugin.getClickerPlayerManager().getStatsProfile(player.getUniqueId());
         LanguageConfig languageConfig = plugin.getLanguageConfig();
         switch (identifier.toUpperCase()) {
             case "COOKIES":
@@ -56,17 +53,14 @@ public class PlaceholderListener extends PlaceholderExpansion {
                 return languageConfig.formatNumber(clickerStatsProfile.getClickerClicks());
             case "PLACE":
                 // %cookieclicker_place%
-                long place = 0;
-                String playerName = player.getName();
-                LinkedHashMap<String, Long> sortedAlltimeData = plugin.getStatsWallUpdater().getSortedAlltimeData();
-                if (sortedAlltimeData == null || sortedAlltimeData.isEmpty() || (!(sortedAlltimeData.containsKey(playerName)))) {
+                if (plugin.getStatsWallUpdater() == null) {
                     break;
                 }
-                try {
-                    place = new ArrayList<>(sortedAlltimeData.keySet()).indexOf(playerName) + 1;
-                } catch (ArrayIndexOutOfBoundsException ignored) {
+                int place = plugin.getStatsWallUpdater().getAlltimeRank(clickerStatsProfile.getName());
+                if (place <= 0) {
+                    break;
                 }
-                return languageConfig.formatNumber(place);
+                return languageConfig.formatNumber((long) place);
         }
         return "N/A";
     }

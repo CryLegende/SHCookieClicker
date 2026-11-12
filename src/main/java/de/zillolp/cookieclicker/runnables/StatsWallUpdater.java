@@ -7,8 +7,9 @@ import de.zillolp.cookieclicker.config.customconfigs.LanguageConfig;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.manager.CookieClickerManager;
 import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
+import de.zillolp.cookieclicker.utils.Items;
 import de.zillolp.cookieclicker.utils.PlayerHeads;
-import de.zillolp.cookieclicker.utils.ReflectionUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -17,25 +18,25 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.Skull;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StatsWallUpdater extends CustomUpdater {
+    private static final String UNKNOWN_SKULL_TEXTURE = "http://textures.minecraft.net/texture/badc048a7ce78f7dad72a07da27d85c0916881e5522eeed1e3daf217a38c1a";
     private final CookieClicker plugin;
-    private final ReflectionUtil reflectionUtil;
     private final LanguageConfig languageConfig;
     private final ClickerPlayerManager clickerPlayerManager;
-    private final LinkedHashMap<String, Long> cachedAlltimeData = new LinkedHashMap<>();
-    private final LinkedHashMap<String, Long> cachedTimedData = new LinkedHashMap<>();
-    private final LinkedHashMap<String, Long> sortedAlltimeData = new LinkedHashMap<>();
-    private final LinkedHashMap<String, Long> sortedTimedData = new LinkedHashMap<>();
+    // Gains de cookies par clic de la période en cours (classement « time »), par pseudo
+    private final ConcurrentHashMap<String, Long> cachedTimedData = new ConcurrentHashMap<>();
+    // Classements publiés d'un bloc : jamais modifiés après publication, lus depuis n'importe quel fil
+    private volatile Map<String, Long> sortedAlltimeData = Map.of();
+    private volatile Map<String, Integer> alltimeRanks = Map.of();
+    private volatile Map<String, Long> sortedTimedData = Map.of();
     private final LinkedHashMap<Integer, Location[]> allTimeLocations;
     private final LinkedHashMap<Integer, Location[]> timeLocations;
 
     public StatsWallUpdater(CookieClicker plugin) {
         super(plugin, true, 200);
         this.plugin = plugin;
-        reflectionUtil = plugin.getReflectionUtil();
         languageConfig = plugin.getLanguageConfig();
 
         CookieClickerManager cookieClickerManager = plugin.getCookieClickerManager();
@@ -43,41 +44,91 @@ public class StatsWallUpdater extends CustomUpdater {
         allTimeLocations = cookieClickerManager.getAlltimeLocations();
         timeLocations = cookieClickerManager.getTimeLocations();
 
+        refreshAlltime();
         updateTimeStatsWall();
     }
 
     @Override
     protected void tick() {
-        for (ClickerStatsProfile clickerStatsProfile : clickerPlayerManager.getClickerStatsProfiles().values()) {
-            cachedAlltimeData.put(clickerStatsProfile.getName(), clickerStatsProfile.getPerClick());
-        }
-        updateAlltimeStatsWall();
+        refreshAlltime();
+        runOnMainThread(() -> renderWall(allTimeLocations, sortedAlltimeData));
         if (sortedTimedData.isEmpty() && cachedTimedData.isEmpty()) {
             return;
         }
         updateTimeStatsWall();
     }
 
+    private void runOnMainThread(Runnable task) {
+        if (Bukkit.isPrimaryThread()) {
+            task.run();
+        } else if (plugin.isEnabled()) {
+            bukkitScheduler.runTask(plugin, task);
+        }
+    }
+
+    /** Classement de tous les joueurs par cookies par clic, et rang de chacun. */
+    public void refreshAlltime() {
+        Map<String, Long> values = new HashMap<>();
+        for (ClickerStatsProfile clickerStatsProfile : clickerPlayerManager.getClickerStatsProfiles().values()) {
+            if (!(clickerStatsProfile.getName().equals("?"))) {
+                values.put(clickerStatsProfile.getName(), clickerStatsProfile.getPerClick());
+            }
+        }
+        LinkedHashMap<String, Long> sorted = sort(values);
+        Map<String, Integer> ranks = new HashMap<>();
+        int rank = 1;
+        for (String name : sorted.keySet()) {
+            ranks.put(name, rank++);
+        }
+        sortedAlltimeData = Collections.unmodifiableMap(sorted);
+        alltimeRanks = ranks;
+    }
+
+    private LinkedHashMap<String, Long> sort(Map<String, Long> values) {
+        LinkedHashMap<String, Long> sorted = new LinkedHashMap<>();
+        values.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEachOrdered(entry -> sorted.put(entry.getKey(), entry.getValue()));
+        return sorted;
+    }
+
     public void updateAlltimeStatsWall() {
-        setStatsWall(allTimeLocations, sortedAlltimeData, cachedAlltimeData);
+        refreshAlltime();
+        runOnMainThread(() -> renderWall(allTimeLocations, sortedAlltimeData));
     }
 
     public void updateTimeStatsWall() {
-        setStatsWall(timeLocations, sortedTimedData, cachedTimedData);
+        sortedTimedData = Collections.unmodifiableMap(sort(new HashMap<>(cachedTimedData)));
+        runOnMainThread(() -> renderWall(timeLocations, sortedTimedData));
     }
 
-    private void setStatsWall(LinkedHashMap<Integer, Location[]> wallLocations, LinkedHashMap<String, Long> sortedData, LinkedHashMap<String, Long> cachedData) {
-        sortedData.clear();
-        cachedData.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEachOrdered(playerData -> sortedData.put(playerData.getKey(), playerData.getValue()));
+    /** Une amélioration achetée compte dans le classement de la période. */
+    public void addTimedGain(String name, long perClick) {
+        cachedTimedData.merge(name, perClick, Long::sum);
+    }
+
+    public void clearTimedData() {
+        cachedTimedData.clear();
+        sortedTimedData = Map.of();
+    }
+
+    /** Rang d'un joueur au classement général, 0 s'il n'y est pas. */
+    public int getAlltimeRank(String name) {
+        return alltimeRanks.getOrDefault(name, 0);
+    }
+
+    private void renderWall(LinkedHashMap<Integer, Location[]> wallLocations, Map<String, Long> sortedData) {
+        if (wallLocations.isEmpty()) {
+            return;
+        }
+        List<Map.Entry<String, Long>> entries = new ArrayList<>(sortedData.entrySet());
         for (Map.Entry<Integer, Location[]> statsWall : wallLocations.entrySet()) {
             int place = statsWall.getKey();
             int index = place - 1;
-            if (sortedData.size() <= index) {
+            if (entries.size() <= index) {
                 setWall(statsWall.getValue(), null, languageConfig.getStatsWallLanguage("STATS_WALL.SIGN_LINES", getPlace(place), "?", "?"));
                 continue;
             }
-            String name = getPlaceName(sortedData, index);
-            setWall(statsWall.getValue(), name, languageConfig.getStatsWallLanguage("STATS_WALL.SIGN_LINES", getPlace(place), name, languageConfig.formatNumber(sortedData.getOrDefault(name, 0L))));
+            Map.Entry<String, Long> entry = entries.get(index);
+            setWall(statsWall.getValue(), entry.getKey(), languageConfig.getStatsWallLanguage("STATS_WALL.SIGN_LINES", getPlace(place), entry.getKey(), languageConfig.formatNumber(entry.getValue())));
         }
     }
 
@@ -87,51 +138,46 @@ public class StatsWallUpdater extends CustomUpdater {
         if (headBlock.getType() == Material.AIR || signBlock.getType() == Material.AIR) {
             return;
         }
-        bukkitScheduler.runTask(plugin, () -> {
-            BlockState signState = signBlock.getState();
-            if (!(signState instanceof Sign)) {
-                return;
-            }
-            Sign sign = (Sign) signState;
+        if (signBlock.getState() instanceof Sign sign) {
             sign.setLine(0, lines[0]);
             sign.setLine(1, lines[1]);
             sign.setLine(2, lines[2]);
             sign.setLine(3, lines[3]);
             sign.update(true);
-        });
-        if (name != null && (!(name.equals("?"))) && plugin.getDatabaseManager().playerExists(name)) {
+        }
+        if (name != null && clickerPlayerManager.findProfile(name) != null) {
             setPlayerSkull(headBlock, name);
             return;
         }
-        String questionName = "?";
-        hasPlayerSkull(headBlock, questionName).thenAccept(hasPlayerSkull -> {
-            if (hasPlayerSkull) {
-                return;
-            }
-            String url = "http://textures.minecraft.net/texture/badc048a7ce78f7dad72a07da27d85c0916881e5522eeed1e3daf217a38c1a";
-            setSkullProfile(url, questionName, headBlock);
-        }).exceptionally(throwable -> {
-            plugin.getLogger().log(Level.SEVERE, "Failed to check hasPlayerSkull for Name: " + questionName, throwable);
-            return null;
-        });
+        setUnknownSkull(headBlock);
     }
 
     // tête d'un joueur du classement, connecté ou non : son skin vient de SHSkins (en mémoire, sans requête réseau).
     // La tête n'est réécrite que si le pseudo ou les textures ont changé (le skin n'est pas connu au démarrage).
     private void setPlayerSkull(Block block, String name) {
-        bukkitScheduler.runTask(plugin, () -> {
-            BlockState blockState = block.getState();
-            if (!(blockState instanceof Skull)) {
-                return;
-            }
-            Skull skull = (Skull) blockState;
-            PlayerProfile wanted = PlayerHeads.profile(null, name);
-            if (hasSameSkin(skull.getPlayerProfile(), wanted)) {
-                return;
-            }
-            skull.setPlayerProfile(wanted);
-            skull.update(true);
-        });
+        if (!(block.getState() instanceof Skull skull)) {
+            return;
+        }
+        PlayerProfile wanted = PlayerHeads.profile(null, name);
+        if (hasSameSkin(skull.getPlayerProfile(), wanted)) {
+            return;
+        }
+        skull.setPlayerProfile(wanted);
+        skull.update(true);
+    }
+
+    // tête « ? » d'une place sans joueur
+    private void setUnknownSkull(Block block) {
+        if (!(block.getState() instanceof Skull skull)) {
+            return;
+        }
+        org.bukkit.profile.PlayerProfile wanted = Items.textureProfile(UNKNOWN_SKULL_TEXTURE);
+        org.bukkit.profile.PlayerProfile current = skull.getOwnerProfile();
+        if (current != null && wanted != null && Objects.equals(current.getTextures().getSkin(), wanted.getTextures().getSkin())) {
+            return;
+        }
+        skull.setOwnerProfile(wanted);
+        skull.update(true);
     }
 
     private boolean hasSameSkin(PlayerProfile current, PlayerProfile wanted) {
@@ -150,32 +196,6 @@ public class StatsWallUpdater extends CustomUpdater {
         return null;
     }
 
-    private void setSkullProfile(String url, String name, Block block) {
-        reflectionUtil.getPlayerProfile(url, name).thenAccept(playerProfile -> {
-            bukkitScheduler.runTask(plugin, () -> {
-                BlockState blockState = block.getState();
-                if (!(blockState instanceof Skull)) {
-                    return;
-                }
-                Skull skull = (Skull) blockState;
-                skull.setOwnerProfile(playerProfile);
-                skull.update(true);
-            });
-        }).exceptionally(throwable -> {
-            plugin.getLogger().log(Level.SEVERE, "Failed to load PlayerProfile for URL: " + url, throwable);
-            return null;
-        });
-    }
-
-    private CompletableFuture<Boolean> hasPlayerSkull(Block block, String name) {
-        CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
-        bukkitScheduler.runTask(plugin, () -> {
-            PlayerProfile playerProfile = ((Skull) block.getState()).getPlayerProfile();
-            completableFuture.complete(playerProfile != null && playerProfile.getName() != null && playerProfile.getName().equals(name));
-        });
-        return completableFuture;
-    }
-
     private String getPlace(int place) {
         String path = "STATS_WALL.RANK_PREFIX.";
         if (place >= 1 && place <= 3) {
@@ -186,23 +206,7 @@ public class StatsWallUpdater extends CustomUpdater {
         return languageConfig.getTranslatedLanguage(path).replace("%number%", languageConfig.formatNumber((long) place));
     }
 
-    private String getPlaceName(LinkedHashMap<String, Long> sortedData, int index) {
-        List<Map.Entry<String, Long>> entryList = new ArrayList<>(sortedData.entrySet());
-        if (index >= 0 && index < entryList.size()) {
-            return entryList.get(index).getKey();
-        }
-        return "?";
-    }
-
-    public LinkedHashMap<String, Long> getSortedAlltimeData() {
+    public Map<String, Long> getSortedAlltimeData() {
         return sortedAlltimeData;
-    }
-
-    public LinkedHashMap<String, Long> getSortedTimedData() {
-        return sortedTimedData;
-    }
-
-    public LinkedHashMap<String, Long> getCachedTimedData() {
-        return cachedTimedData;
     }
 }

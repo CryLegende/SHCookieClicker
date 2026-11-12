@@ -29,7 +29,6 @@ public class SetSubCommand extends SubCommand {
         }
         Player player = (Player) commandSender;
         UUID uuid = player.getUniqueId();
-        String PREFIX = languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX);
         if (args.length == 2) {
             if (!(args[1].equalsIgnoreCase("resettimer"))) {
                 return false;
@@ -41,7 +40,7 @@ public class SetSubCommand extends SubCommand {
                 }
             }
             locationConfig.saveLocation("ResetTimer", player.getLocation());
-            commandSender.sendMessage(PREFIX + "§7You have set the §bresettimer§7.");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.RESETTIMER_SET));
             return true;
         }
         if (args.length == 3) {
@@ -49,12 +48,12 @@ public class SetSubCommand extends SubCommand {
                 return false;
             }
             if (!(isNumeric(args[2]))) {
-                commandSender.sendMessage(PREFIX + "§cYour input §4" + args[2] + " §cis not a number!");
+                commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.NOT_A_NUMBER).replace("%input%", args[2]));
                 return true;
             }
             ClickerGameProfile clickerGameProfile = plugin.getClickerPlayerManager().getGameProfile(uuid);
             clickerGameProfile.setSetupState(ClickerGameProfile.SetupState.SET_CLICKER, Integer.parseInt(args[2]));
-            commandSender.sendMessage(PREFIX + "§7Make right click on a §eblock§7.");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SETUP_CLICK_BLOCK));
             return true;
         }
         if (!(args[1].equalsIgnoreCase("statswall"))) {
@@ -64,7 +63,7 @@ public class SetSubCommand extends SubCommand {
             return false;
         }
         if (!(isNumeric(args[3]))) {
-            commandSender.sendMessage(PREFIX + "§cYour input §4" + args[3] + " §cis not a number!");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.NOT_A_NUMBER).replace("%input%", args[3]));
             return true;
         }
         ClickerGameProfile clickerGameProfile = plugin.getClickerPlayerManager().getGameProfile(uuid);
@@ -73,7 +72,7 @@ public class SetSubCommand extends SubCommand {
             setupState = ClickerGameProfile.SetupState.SET_TIME_HEAD;
         }
         clickerGameProfile.setSetupState(setupState, Integer.parseInt(args[3]));
-        commandSender.sendMessage(PREFIX + "§7Make right click on a §ehead§7.");
+        commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SETUP_CLICK_HEAD));
         return true;
     }
 

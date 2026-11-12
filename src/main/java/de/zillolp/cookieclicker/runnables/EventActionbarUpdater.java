@@ -10,8 +10,7 @@ import de.zillolp.cookieclicker.enums.PluginLanguage;
 import de.zillolp.cookieclicker.manager.ClickerEventManager;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.profiles.ClickerGameProfile;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import de.zillolp.cookieclicker.utils.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -37,12 +36,14 @@ public class EventActionbarUpdater extends CustomUpdater {
     @Override
     protected void tick() {
         HashMap<UUID, HashMap<ClickerEventType, ClickerEvent>> activeEvents = clickerEventManager.getActiveEvents();
+        if (activeEvents.isEmpty()) {
+            return;
+        }
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID uuid = player.getUniqueId();
             if (!activeEvents.containsKey(uuid)) {
                 continue;
             }
-            Player.Spigot spigotPlayer = player.spigot();
             ClickerGameProfile clickerGameProfile = clickerPlayerManager.getGameProfile(uuid);
             for (Map.Entry<ClickerEventType, ClickerEvent> clickerEventEntry : activeEvents.get(uuid).entrySet()) {
                 ClickerEvent clickerEvent = clickerEventEntry.getValue();
@@ -53,21 +54,21 @@ public class EventActionbarUpdater extends CustomUpdater {
                     continue;
                 }
                 for (Location location : plugin.getCookieClickerManager().getClickerLocations()) {
-                    if (player.getLocation().distance(location) > 5) {
+                    if (player.getWorld() != location.getWorld() || player.getLocation().distanceSquared(location) > 25) {
                         continue;
                     }
 
                     if (clickerGameProfile.isUnderLastPlayerMove(pluginConfig.getAFKCooldownSeconds())) {
-                        spigotPlayer.sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(languageConfig.getReplacedLanguage(PluginLanguage.AFK_MESSAGE, uuid)));
+                        player.sendActionBar(Text.component(languageConfig.getReplacedLanguage(PluginLanguage.AFK_MESSAGE, uuid)));
                         break;
                     }
 
                     if (clickerGameProfile.isOverCPS(pluginConfig.getMaximumClicksPerSecond())) {
-                        spigotPlayer.sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(languageConfig.getReplacedLanguage(PluginLanguage.MAX_CPS, uuid)));
+                        player.sendActionBar(Text.component(languageConfig.getReplacedLanguage(PluginLanguage.MAX_CPS, uuid)));
                         break;
                     }
 
-                    spigotPlayer.sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(languageConfig.getAnimatedLanguage(PluginLanguage.CLICK_MESSAGE, uuid)));
+                    player.sendActionBar(Text.component(languageConfig.getAnimatedLanguage(PluginLanguage.CLICK_MESSAGE, uuid)));
                     break;
                 }
             }

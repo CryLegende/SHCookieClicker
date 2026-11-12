@@ -3,17 +3,20 @@ package de.zillolp.cookieclicker.profiles;
 public class ClickerGameProfile {
     private long lastClickerInteraction;
     private long lastCommandInteraction;
+    private long lastMenuInteraction;
     private long lastPlayerMove;
     private long lastParticleEffect;
     private int playerClicksPerSecond;
     private SetupState setupState;
     private boolean firstClicked;
+    private volatile boolean loaded;
     private int frameCount;
 
     public ClickerGameProfile() {
         long currentTime = System.currentTimeMillis();
         lastClickerInteraction = currentTime;
         lastCommandInteraction = currentTime;
+        lastMenuInteraction = 0;
         lastPlayerMove = currentTime;
         lastParticleEffect = currentTime;
         playerClicksPerSecond = 0;
@@ -36,6 +39,23 @@ public class ClickerGameProfile {
 
     public void updateLastCommandInteraction() {
         lastCommandInteraction = System.currentTimeMillis();
+    }
+
+    public boolean isOverLastMenuInteraction(long delay) {
+        return lastMenuInteraction + delay > System.currentTimeMillis();
+    }
+
+    public void updateLastMenuInteraction() {
+        lastMenuInteraction = System.currentTimeMillis();
+    }
+
+    /** Vrai quand la progression du joueur est prête : avant, ses clics ne comptent pas. */
+    public boolean isLoaded() {
+        return loaded;
+    }
+
+    public void setLoaded(boolean loaded) {
+        this.loaded = loaded;
     }
 
     public boolean isUnderLastPlayerMove(long delay) {

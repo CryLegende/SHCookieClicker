@@ -98,8 +98,8 @@ public class StatsWallListener implements Listener {
         String path = statsWallLocationPaths.get(location);
         String[] roots = path.replace(".", "_").split("_");
         if (roots.length < 3) {
-            logger.log(Level.WARNING, "Invalid stats wall path format: " + path + " (expected at least 3 parts, got " + roots.length + ")");
-            player.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.PREFIX) + "§cError removing stats wall: Invalid location data");
+            logger.log(Level.WARNING, "Chemin de mur de statistiques invalide : " + path);
+            player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.WALL_REMOVE_ERROR));
             return;
         }
 
@@ -107,8 +107,8 @@ public class StatsWallListener implements Listener {
         try {
             place = Integer.parseInt(roots[2]);
         } catch (NumberFormatException e) {
-            logger.log(Level.WARNING, "Invalid place number in stats wall path: " + roots[2], e);
-            player.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.PREFIX) + "§cError removing stats wall: Invalid place number");
+            logger.log(Level.WARNING, "Numéro de place invalide dans le mur de statistiques : " + roots[2], e);
+            player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.WALL_REMOVE_ERROR));
             return;
         }
 
@@ -123,6 +123,6 @@ public class StatsWallListener implements Listener {
         } else {
             cookieClickerManager.getTimeLocations().remove(place);
         }
-        player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX) + "§7You have removed §6" + statsWallType + "-" + place + "§7.");
+        player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.WALL_REMOVED).replace("%wall%", statsWallType + "-" + place));
     }
 }

@@ -26,7 +26,7 @@ public class MovingHologram implements Hologram {
         this.time = time;
         currentLine = line;
         isSpawned = false;
-        hologram = plugin.getVersionManager().getHologram(line);
+        hologram = new PaperHologram(plugin, line);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class MovingHologram implements Hologram {
         spawnLocation = location;
         hologram.spawn(player, location);
         isSpawned = true;
-        bukkitTask = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+        bukkitTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             time--;
             if (time <= 0) {
                 plugin.getHologramManager().deleteHologram(player, uuid);

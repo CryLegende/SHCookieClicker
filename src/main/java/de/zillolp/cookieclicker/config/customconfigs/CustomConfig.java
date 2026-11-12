@@ -8,6 +8,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 public class CustomConfig {
@@ -46,6 +49,45 @@ public class CustomConfig {
     /** Remplace la configuration en mémoire par une lecture réussie. */
     public void apply(YamlConfiguration yaml) {
         fileConfiguration = yaml;
+        if (usesJarDefaults()) {
+            loadJarDefaults();
+        }
+    }
+
+    /** Une clé absente du fichier du serveur (ajoutée par une mise à jour) prend sa valeur dans le fichier du jar. */
+    protected boolean usesJarDefaults() {
+        return true;
+    }
+
+    private void loadJarDefaults() {
+        try (InputStream in = plugin.getResource(name)) {
+            if (in == null) {
+                return;
+            }
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+            // Valeur par défaut d'une clé absente d'une section présente : lue par setDefaults
+            fileConfiguration.setDefaults(defaults);
+            // Section entière absente du fichier du serveur : copiée en mémoire (une section qui n'existe que dans les
+            // valeurs par défaut est vue vide par getKeys), le fichier du serveur n'est pas modifié
+            for (String key : defaults.getKeys(false)) {
+                if (fileConfiguration.contains(key, true)) {
+                    continue;
+                }
+                Object value = defaults.get(key);
+                if (value instanceof ConfigurationSection section) {
+                    for (String path : section.getKeys(true)) {
+                        Object leaf = section.get(path);
+                        if (!(leaf instanceof ConfigurationSection)) {
+                            fileConfiguration.set(key + "." + path, leaf);
+                        }
+                    }
+                } else {
+                    fileConfiguration.set(key, value);
+                }
+            }
+        } catch (IOException exception) {
+            plugin.getLogger().warning(name + " du jar illisible : " + exception.getMessage());
+        }
     }
 
     public String getFileName() {
@@ -56,16 +98,12 @@ public class CustomConfig {
         try {
             fileConfiguration.save(file);
         } catch (IOException exception) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to save " + file.getName() + ": " + exception);
+            plugin.getLogger().log(Level.SEVERE, "Écriture de " + file.getName() + " impossible : " + exception);
         }
     }
 
     public String[] getConfigurationSection(String sectionName) {
-        if (!(fileConfiguration.contains(sectionName))) {
-            return new String[0];
-        }
-        ConfigurationSection configurationSection = fileConfiguration.getConfigurationSection(sectionName);
-        if (configurationSection == null) {
+        if (!(fileConfiguration.get(sectionName) instanceof ConfigurationSection configurationSection)) {
             return new String[0];
         }
         return configurationSection.getKeys(false).toArray(new String[0]);

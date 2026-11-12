@@ -1,10 +1,11 @@
 package de.zillolp.cookieclicker.commands.subcommands;
 
 import de.zillolp.cookieclicker.CookieClicker;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.hover.content.Text;
+import de.zillolp.cookieclicker.enums.PluginLanguage;
+import de.zillolp.cookieclicker.utils.Text;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -20,24 +21,24 @@ public class ListSubCommand extends SubCommand {
     @Override
     public boolean onCommand(CookieClicker plugin, CommandSender commandSender, Command command, String[] args) {
         ArrayList<Location> clickerLocations = plugin.getCookieClickerManager().getClickerLocations();
-        commandSender.sendMessage("§6All CookieClicker§7:");
+        commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.LIST_HEADER));
         int number = 1;
         for (Location clickerLocation : clickerLocations) {
             double x = clickerLocation.getX() + 0.5;
             double y = clickerLocation.getY() + 1;
             double z = clickerLocation.getZ() + 0.5;
-            TextComponent textComponent = new TextComponent("§7- §eClicker-" + number);
-            textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tp " + x + " " + y + " " + z));
-            textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§7Click to teleport")));
-            commandSender.spigot().sendMessage(textComponent);
+            Component entry = Text.component(languageConfig.getTranslatedLanguage(PluginLanguage.LIST_ENTRY).replace("%number%", String.valueOf(number)))
+                    .clickEvent(ClickEvent.runCommand("/tp " + x + " " + y + " " + z))
+                    .hoverEvent(HoverEvent.showText(Text.component(languageConfig.getTranslatedLanguage(PluginLanguage.LIST_HOVER))));
+            commandSender.sendMessage(entry);
             number++;
         }
         int clickerLocationSize = clickerLocations.size();
         if (clickerLocationSize == 1) {
-            commandSender.sendMessage("§7» There is §6" + clickerLocationSize + " §7Clicker.");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.LIST_COUNT_ONE));
             return true;
         }
-        commandSender.sendMessage("§7» There are §6" + clickerLocationSize + " §7Clickers.");
+        commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.LIST_COUNT_MANY).replace("%count%", String.valueOf(clickerLocationSize)));
         return true;
     }
 

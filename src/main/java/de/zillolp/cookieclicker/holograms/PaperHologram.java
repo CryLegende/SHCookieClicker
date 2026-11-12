@@ -3,9 +3,8 @@ package de.zillolp.cookieclicker.holograms;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.interfaces.Hologram;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.zillolp.cookieclicker.utils.Text;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Display;
@@ -24,7 +23,6 @@ public class PaperHologram implements Hologram {
     // le nom d'un ArmorStand marqueur s'affiche 0,5 bloc au-dessus de sa position ; le texte d'un TextDisplay
     // part de sa position
     private static final double NAME_OFFSET = 0.5;
-    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
     private final CookieClicker plugin;
     private final UUID uuid;
@@ -48,7 +46,7 @@ public class PaperHologram implements Hologram {
     }
 
     private Component text(String line) {
-        return LEGACY.deserialize(ChatColor.translateAlternateColorCodes('&', line));
+        return Text.component(line);
     }
 
     @Override

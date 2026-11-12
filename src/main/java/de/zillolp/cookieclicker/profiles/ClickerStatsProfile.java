@@ -1,59 +1,30 @@
 package de.zillolp.cookieclicker.profiles;
 
-import de.zillolp.cookieclicker.CookieClicker;
-import de.zillolp.cookieclicker.database.DatabaseManager;
 import de.zillolp.cookieclicker.enums.ShopType;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+/** Progression d'un joueur : cookies, cookies par clic, designs choisis et achats de chaque boutique. */
 public class ClickerStatsProfile {
-    private final DatabaseManager databaseManager;
     private final UUID uuid;
-    private final HashMap<ShopType, HashMap<Integer, Long>> shopPrices = new HashMap<>();
-    private final HashMap<ShopType, HashMap<Integer, Boolean>> shopItems = new HashMap<>();
-    private final AtomicLong cookies;
-    private final AtomicLong perClick;
-    private final AtomicLong clickerClicks;
-    private final AtomicLong blockDesign;
-    private final AtomicLong particleDesign;
-    private final AtomicLong menuDesign;
-    private final AtomicBoolean dirty;
+    private final Map<ShopType, Map<Integer, Long>> purchases = new ConcurrentHashMap<>();
+    private final AtomicLong cookies = new AtomicLong(0L);
+    private final AtomicLong perClick = new AtomicLong(1L);
+    private final AtomicLong clickerClicks = new AtomicLong(0L);
+    private final AtomicLong blockDesign = new AtomicLong(0L);
+    private final AtomicLong particleDesign = new AtomicLong(0L);
+    private final AtomicLong menuDesign = new AtomicLong(0L);
+    private final AtomicBoolean dirty = new AtomicBoolean(false);
     private volatile String name;
 
-    public ClickerStatsProfile(UUID uuid, CookieClicker plugin) {
-        databaseManager = plugin.getDatabaseManager();
-        this.uuid = uuid;
-        name = "?";
-        cookies = new AtomicLong(0L);
-        perClick = new AtomicLong(1L);
-        clickerClicks = new AtomicLong(0L);
-        blockDesign = new AtomicLong(0L);
-        particleDesign = new AtomicLong(0L);
-        menuDesign = new AtomicLong(0L);
-        dirty = new AtomicBoolean(false);
-        databaseManager.loadClickerStatsProfile(this, true);
-    }
-
-    public ClickerStatsProfile(UUID uuid, String name, CookieClicker plugin) {
-        databaseManager = plugin.getDatabaseManager();
+    public ClickerStatsProfile(UUID uuid, String name) {
         this.uuid = uuid;
         this.name = name;
-        cookies = new AtomicLong(0L);
-        perClick = new AtomicLong(1L);
-        clickerClicks = new AtomicLong(0L);
-        blockDesign = new AtomicLong(0L);
-        particleDesign = new AtomicLong(0L);
-        menuDesign = new AtomicLong(0L);
-        dirty = new AtomicBoolean(false);
-        if (!(databaseManager.playerExists(uuid))) {
-            databaseManager.loadDefaultShops(this);
-            databaseManager.saveClickerStatsProfile(this);
-            return;
-        }
-        databaseManager.loadClickerStatsProfile(this, false);
     }
 
     public UUID getUuid() {
@@ -79,17 +50,7 @@ public class ClickerStatsProfile {
     }
 
     public void addCookies(long cookies) {
-        long newValue;
-        long current = this.cookies.get();
-        if (cookies > 0 && current > Long.MAX_VALUE - cookies) {
-            newValue = Long.MAX_VALUE;
-        } else if (cookies < 0 && current < Long.MIN_VALUE - cookies) {
-            newValue = Long.MIN_VALUE;
-        } else {
-            newValue = current + cookies;
-        }
-
-        this.cookies.set(newValue);
+        this.cookies.accumulateAndGet(cookies, ClickerStatsProfile::saturatedAdd);
         markDirty();
     }
 
@@ -107,18 +68,7 @@ public class ClickerStatsProfile {
     }
 
     public void addPerClick(long perClick) {
-        long newValue;
-        long current = this.perClick.get();
-
-        if (perClick > 0 && current > Long.MAX_VALUE - perClick) {
-            newValue = Long.MAX_VALUE;
-        } else if (perClick < 0 && current < Long.MIN_VALUE - perClick) {
-            newValue = Long.MIN_VALUE;
-        } else {
-            newValue = current + perClick;
-        }
-
-        this.perClick.set(newValue);
+        this.perClick.accumulateAndGet(perClick, ClickerStatsProfile::saturatedAdd);
         markDirty();
     }
 
@@ -132,19 +82,18 @@ public class ClickerStatsProfile {
     }
 
     public void addClickerClicks(long clickerClicks) {
-        long newValue;
-        long current = this.clickerClicks.get();
-
-        if (clickerClicks > 0 && current > Long.MAX_VALUE - clickerClicks) {
-            newValue = Long.MAX_VALUE;
-        } else if (clickerClicks < 0 && current < Long.MIN_VALUE - clickerClicks) {
-            newValue = Long.MIN_VALUE;
-        } else {
-            newValue = current + clickerClicks;
-        }
-
-        this.clickerClicks.set(newValue);
+        this.clickerClicks.accumulateAndGet(clickerClicks, ClickerStatsProfile::saturatedAdd);
         markDirty();
+    }
+
+    private static long saturatedAdd(long current, long added) {
+        if (added > 0 && current > Long.MAX_VALUE - added) {
+            return Long.MAX_VALUE;
+        }
+        if (added < 0 && current < Long.MIN_VALUE - added) {
+            return Long.MIN_VALUE;
+        }
+        return current + added;
     }
 
     public long getBlockDesign() {
@@ -174,6 +123,26 @@ public class ClickerStatsProfile {
         markDirty();
     }
 
+    /** Design sélectionné d'une boutique de design, 0 si aucun. */
+    public long getSelectedDesign(ShopType shopType) {
+        return switch (shopType) {
+            case BLOCK_DESIGN -> blockDesign.get();
+            case HIT_PARTICLE_DESIGN -> particleDesign.get();
+            case MENU_DESIGN -> menuDesign.get();
+            default -> 0L;
+        };
+    }
+
+    public void setSelectedDesign(ShopType shopType, long id) {
+        switch (shopType) {
+            case BLOCK_DESIGN -> setBlockDesign(id);
+            case HIT_PARTICLE_DESIGN -> setParticleDesign(id);
+            case MENU_DESIGN -> setMenuDesign(id);
+            default -> {
+            }
+        }
+    }
+
     public boolean isDirty() {
         return dirty.get();
     }
@@ -186,20 +155,34 @@ public class ClickerStatsProfile {
         dirty.set(false);
     }
 
-
-    public HashMap<Integer, Long> getPrices(ShopType shopType) {
-        return shopPrices.getOrDefault(shopType, new HashMap<>());
+    /** Nombre d'achats d'un article : le nombre de fois qu'une amélioration a été prise, 1 pour un design acheté. */
+    public long getPurchases(ShopType shopType, int id) {
+        return purchases.getOrDefault(shopType, Map.of()).getOrDefault(id, 0L);
     }
 
-    public HashMap<Integer, Boolean> getItems(ShopType shopType) {
-        return shopItems.getOrDefault(shopType, new HashMap<>());
+    public void setPurchases(ShopType shopType, int id, long amount) {
+        purchases.computeIfAbsent(shopType, key -> new ConcurrentHashMap<>()).put(id, amount);
+        markDirty();
     }
 
-    public HashMap<ShopType, HashMap<Integer, Long>> getShopPrices() {
-        return shopPrices;
+    public void addPurchase(ShopType shopType, int id) {
+        purchases.computeIfAbsent(shopType, key -> new ConcurrentHashMap<>()).merge(id, 1L, Long::sum);
+        markDirty();
     }
 
-    public HashMap<ShopType, HashMap<Integer, Boolean>> getShopItems() {
-        return shopItems;
+    public boolean owns(ShopType shopType, int id) {
+        return getPurchases(shopType, id) > 0;
+    }
+
+    /** Copie des achats, pour la sauvegarde. */
+    public Map<ShopType, Map<Integer, Long>> getPurchaseSnapshot() {
+        Map<ShopType, Map<Integer, Long>> copy = new HashMap<>();
+        purchases.forEach((shopType, items) -> copy.put(shopType, new HashMap<>(items)));
+        return copy;
+    }
+
+    public void clearPurchases() {
+        purchases.clear();
+        markDirty();
     }
 }

@@ -6,4 +6,9 @@ public class MySQLConfig extends CustomConfig {
     public MySQLConfig(CookieClicker plugin, String name) {
         super(plugin, name);
     }
+
+    @Override
+    protected boolean usesJarDefaults() {
+        return false;
+    }
 }

@@ -2,7 +2,6 @@ package de.zillolp.cookieclicker.holograms;
 
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.interfaces.Hologram;
-import de.zillolp.cookieclicker.manager.VersionManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -12,7 +11,7 @@ import java.util.UUID;
 
 public class TextHologram implements Hologram {
     private final UUID uuid;
-    private final VersionManager versionManager;
+    private final CookieClicker plugin;
     private final ArrayList<Hologram> holograms = new ArrayList<>();
     private String[] lines;
     private int linesSize;
@@ -22,7 +21,7 @@ public class TextHologram implements Hologram {
         uuid = UUID.randomUUID();
         this.lines = lines;
         linesSize = lines.length;
-        versionManager = plugin.getVersionManager();
+        this.plugin = plugin;
     }
 
     @Override
@@ -34,7 +33,7 @@ public class TextHologram implements Hologram {
             if (line.equalsIgnoreCase("%empty%") || line.equalsIgnoreCase("")) {
                 continue;
             }
-            Hologram hologram = versionManager.getHologram(line);
+            Hologram hologram = new PaperHologram(plugin, line);
             hologram.spawn(player, location.clone().add(0, holoHeight - 0.3 * number, 0));
             holograms.add(hologram);
         }

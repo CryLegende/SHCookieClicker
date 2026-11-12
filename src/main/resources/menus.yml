@@ -1,0 +1,220 @@
+# ======================================================================== #
+# SHCookieClicker : menus
+#
+# Mise en page des menus de SkyHand : titre « &8&lMenu &8| Nom », cadre de vitres noires (filler), vitres grises
+# en accent, « Retour » en papier au centre de la dernière ligne, flèches de page de part et d'autre du retour.
+# Le fond (filler) est remplacé par le design de menu que le joueur a acheté et sélectionné.
+#
+# Les cases se donnent par numéro, ou par liste et intervalles : « 10-16, 19-25 ».
+# Placeholders :
+#   tous les menus     %cookies% %perclick% %clickerclicks% %place%
+#   boutiques          %addclick% %price% %purchases% %missing% %displayname%
+#   titres paginés     %page% %pages%
+# Les sons sont dans config.yml (section sounds), les textes envoyés dans le tchat dans messages.yml.
+# Une clé absente de ce fichier prend la valeur du jar.
+# ======================================================================== #
+
+filler:
+  material: BLACK_STAINED_GLASS_PANE
+  name: '&r'
+
+accent:
+  material: GRAY_STAINED_GLASS_PANE
+  name: '&r'
+
+# Fiche du joueur, en haut de chaque menu
+stats:
+  material: COOKIE
+  name: '&6Vos cookies'
+  lore:
+    - ''
+    - '&8• &7Cookies &8&l» &e%cookies% ❂'
+    - '&8• &7Cookies par clic &8&l» &e%perclick% ❂'
+    - '&8• &7Clics sur le clicker &8&l» &e%clickerclicks%'
+    - '&8• &7Classement &8&l» &e%place%'
+
+back:
+  material: PAPER
+  name: '&c⤾ Retour &7(Clic)'
+
+previous-page:
+  material: ARROW
+  name: '&fPage précédente'
+  lore:
+    - ''
+    - '&8• &7Cliquez ici pour voir'
+    - '&7la page précédente'
+
+next-page:
+  material: ARROW
+  name: '&fPage suivante'
+  lore:
+    - ''
+    - '&8• &7Cliquez ici pour voir'
+    - '&7la page suivante'
+
+# Clic droit sur le clicker
+home:
+  title: '&8&lMenu &8| CookieClicker'
+  size: 27
+  accent-slots: 10, 12, 14, 16
+  stats-slot: 11
+  shop:
+    slot: 13
+    material: EMERALD
+    name: '&aBoutique'
+    lore:
+      - ''
+      - '&8• &7Achetez des améliorations'
+      - '&7pour gagner plus de cookies'
+      - '&7à chaque clic'
+      - ''
+      - '&7&o(( &a&oCliquez &7&opour ouvrir la boutique &7&o))'
+  design:
+    slot: 15
+    material: PAINTING
+    name: '&bDesigns'
+    lore:
+      - ''
+      - '&8• &7Changez l''apparence du clicker,'
+      - '&7de vos clics et des menus'
+      - ''
+      - '&7&o(( &b&oCliquez &7&opour choisir vos designs &7&o))'
+
+# Améliorations : chacune se rachète sans limite, le prix monte à chaque achat
+shop:
+  title: '&8&lMenu &8| Boutique'
+  size: 36
+  slots: 10-16
+  accent-slots: 3, 5
+  stats-slot: 4
+  back-slot: 31
+  premium:
+    slot: 33
+    material: NETHER_STAR
+    name: '&dBoutique VipElite'
+    lore:
+      - ''
+      - '&8• &7Des améliorations plus puissantes,'
+      - '&7réservées au grade &dVipElite'
+      - ''
+      - '&7&o(( &d&oCliquez &7&opour ouvrir la boutique &7&o))'
+    lore-locked:
+      - ''
+      - '&8• &7Des améliorations plus puissantes,'
+      - '&7réservées au grade &dVipElite'
+      - ''
+      - '&7&o(( &c&oGrade VipElite requis &7&o))'
+
+premium-shop:
+  title: '&8&lMenu &8| Boutique VipElite'
+  size: 36
+  slots: 10-16
+  accent-slots: 3, 5
+  stats-slot: 4
+  back-slot: 31
+
+upgrade:
+  name: '&6+%addclick% ❂ &7par clic'
+  lore-buyable:
+    - ''
+    - '&8• &7Prix &8&l» &a%price% ❂'
+    - '&8• &7Achats &8&l» &f%purchases%'
+    - ''
+    - '&7&o(( &a&oCliquez &7&opour acheter &7&o))'
+  lore-locked:
+    - ''
+    - '&8• &7Prix &8&l» &c%price% ❂'
+    - '&8• &7Achats &8&l» &f%purchases%'
+    - ''
+    - '&7&o(( &c&oIl vous manque &e%missing% ❂ &7&o))'
+
+# Designs
+design:
+  title: '&8&lMenu &8| Designs'
+  size: 27
+  accent-slots: 10, 12, 14, 16
+  back-slot: 22
+  block:
+    slot: 11
+    material: PRISMARINE
+    name: '&bBloc du clicker'
+    lore:
+      - ''
+      - '&8• &7Le bloc que vous voyez'
+      - '&7à la place du clicker'
+      - ''
+      - '&7&o(( &b&oCliquez &7&opour choisir &7&o))'
+  hit-particle:
+    slot: 13
+    material: DRAGON_BREATH
+    name: '&dEffet de coup'
+    lore:
+      - ''
+      - '&8• &7L''animation qui accompagne'
+      - '&7vos clics sur le clicker'
+      - ''
+      - '&7&o(( &d&oCliquez &7&opour choisir &7&o))'
+  menu:
+    slot: 15
+    material: PAINTING
+    name: '&eFond des menus'
+    lore:
+      - ''
+      - '&8• &7La couleur des vitres'
+      - '&7qui entourent les menus'
+      - ''
+      - '&7&o(( &e&oCliquez &7&opour choisir &7&o))'
+
+block-design:
+  title: '&8&lMenu &8| Bloc du clicker'
+  size: 36
+  slots: 10-16
+  accent-slots: 3, 5
+  stats-slot: 4
+  back-slot: 31
+
+hit-particle-design:
+  title: '&8&lMenu &8| Effet de coup'
+  size: 36
+  slots: 11-15
+  accent-slots: 3, 5
+  stats-slot: 4
+  back-slot: 31
+
+menu-design:
+  title: '&8&lMenu &8| Fond des menus &8(%page%/%pages%)'
+  size: 45
+  slots: 10-16, 19-25, 28-34
+  accent-slots: 3, 5
+  stats-slot: 4
+  back-slot: 40
+  previous-page-slot: 39
+  next-page-slot: 41
+
+# Les trois menus de design partagent ces textes
+design-item:
+  name-buyable: '&a%displayname%'
+  name-locked: '&c%displayname%'
+  name-owned: '&f%displayname%'
+  name-selected: '&b%displayname%'
+  lore-buyable:
+    - ''
+    - '&8• &7Prix &8&l» &a%price% ❂'
+    - ''
+    - '&7&o(( &a&oCliquez &7&opour acheter &7&o))'
+  lore-locked:
+    - ''
+    - '&8• &7Prix &8&l» &c%price% ❂'
+    - ''
+    - '&7&o(( &c&oIl vous manque &e%missing% ❂ &7&o))'
+  lore-owned:
+    - ''
+    - '&a✔ &7Acheté'
+    - ''
+    - '&7&o(( &e&oClic gauche &7&opour sélectionner &7&o))'
+  lore-selected:
+    - ''
+    - '&b★ &7Sélectionné'
+    - ''
+    - '&7&o(( &c&oClic droit &7&opour désactiver &7&o))'

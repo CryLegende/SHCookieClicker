@@ -40,8 +40,6 @@ public class ReloadSubCommand extends SubCommand {
         plugin.getSoundManager().load();
         plugin.restartStatsUpdater();
         StatsWallUpdater statsWallUpdater = plugin.getStatsWallUpdater();
-        statsWallUpdater.getSortedAlltimeData().clear();
-        statsWallUpdater.getCachedTimedData().clear();
         statsWallUpdater.updateAlltimeStatsWall();
         statsWallUpdater.updateTimeStatsWall();
         plugin.loadPlayers();

@@ -15,6 +15,7 @@ public class ConfigManager {
     private final CookieClicker plugin;
     private PluginConfig pluginConfig;
     private LanguageConfig languageConfig;
+    private MenuConfig menuConfig;
     private LocationConfig locationConfig;
     private MySQLConfig mySQLConfig;
 
@@ -25,7 +26,8 @@ public class ConfigManager {
 
     private void registerConfigs() {
         pluginConfig = new PluginConfig(plugin, "config.yml");
-        languageConfig = new LanguageConfig(plugin, "language.yml");
+        languageConfig = new LanguageConfig(plugin, "messages.yml");
+        menuConfig = new MenuConfig(plugin, "menus.yml");
         locationConfig = new LocationConfig(plugin, "locations.yml");
         mySQLConfig = new MySQLConfig(plugin, "mysql.yml");
     }
@@ -51,7 +53,7 @@ public class ConfigManager {
 
     public Pending prepareReload() {
         Pending pending = new Pending();
-        for (CustomConfig config : new CustomConfig[]{pluginConfig, languageConfig, locationConfig, mySQLConfig}) {
+        for (CustomConfig config : new CustomConfig[]{pluginConfig, languageConfig, menuConfig, locationConfig, mySQLConfig}) {
             try {
                 pending.parsed.put(config, config.parse());
             } catch (IOException | InvalidConfigurationException exception) {
@@ -69,6 +71,10 @@ public class ConfigManager {
 
     public LanguageConfig getLanguageConfig() {
         return languageConfig;
+    }
+
+    public MenuConfig getMenuConfig() {
+        return menuConfig;
     }
 
     public LocationConfig getLocationConfig() {

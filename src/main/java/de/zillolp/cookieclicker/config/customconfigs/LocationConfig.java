@@ -14,6 +14,11 @@ public class LocationConfig extends CustomConfig {
         super(plugin, name);
     }
 
+    @Override
+    protected boolean usesJarDefaults() {
+        return false;
+    }
+
     public boolean isLocation(String locationName) {
         return fileConfiguration.contains(mainPath + locationName) && getLocation(locationName) != null;
     }

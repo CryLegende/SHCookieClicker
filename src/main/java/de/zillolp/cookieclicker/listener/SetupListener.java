@@ -53,10 +53,9 @@ public class SetupListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        String PREFIX = languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX);
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             clickerGameProfile.setSetupState(ClickerGameProfile.SetupState.NONE, 0);
-            player.sendMessage(PREFIX + "§cThe operation was canceled!");
+            player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SETUP_CANCELLED));
             return;
         }
         handleSetup(player, clickerGameProfile, clickedBlock);
@@ -67,29 +66,30 @@ public class SetupListener implements Listener {
         int number = setupState.getNumber();
         Material type = clickedBlock.getType();
         Location location = clickedBlock.getLocation();
-        String PREFIX = languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX);
         LocationConfig locationConfig = plugin.getLocationConfig();
         switch (setupState) {
             case SET_CLICKER:
                 boolean locationFound = plugin.getCookieClickerManager().getClickerLocations().stream().anyMatch(location1 -> reflectionUtil.isSameLocation(location1, location));
                 if (locationFound) {
-                    player.sendMessage(PREFIX + "§cThis block is already a CookieClicker.");
+                    player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.CLICKER_ALREADY));
                     return;
                 }
                 locationConfig.saveLocation("CookieClicker.Clicker-" + number, location);
                 plugin.getCookieClickerManager().getClickerLocations().add(location);
                 for (Player player1 : Bukkit.getOnlinePlayers()) {
-                    hologramManager.spawnHologram(player1, new TextHologram(plugin, languageConfig.getReplaceLanguages(PluginLanguage.CLICKER_HOLOGRAM, player1.getUniqueId())), location);
+                    if (plugin.getPluginConfig().hasClickerHolograms()) {
+                        hologramManager.spawnHologram(player1, new TextHologram(plugin, languageConfig.getReplaceLanguages(PluginLanguage.CLICKER_HOLOGRAM, player1.getUniqueId())), location.clone().add(0.5, 1, 0.5));
+                    }
                     designManager.sendClickerBlockDesign(player1);
                 }
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> designManager.sendClickerBlockDesign(player), 1L);
                 clickerGameProfile.setSetupState(ClickerGameProfile.SetupState.NONE, 0);
-                player.sendMessage(PREFIX + "§7You have set the §bCookieClicker-" + number + "§7.");
+                player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.CLICKER_SET).replace("%number%", String.valueOf(number)));
                 break;
             case SET_ALLTIME_HEAD:
             case SET_TIME_HEAD:
                 if (type != Material.PLAYER_HEAD && type != Material.PLAYER_WALL_HEAD) {
-                    player.sendMessage(PREFIX + "§cMake right click on a head.");
+                    player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SETUP_NOT_A_HEAD));
                     return;
                 }
                 if (setupState == ClickerGameProfile.SetupState.SET_ALLTIME_HEAD) {
@@ -98,12 +98,12 @@ public class SetupListener implements Listener {
                     clickerGameProfile.setSetupState(ClickerGameProfile.SetupState.SET_TIME_SIGN, number);
                 }
                 locationConfig.saveLocation(getStatsPath(setupState) + number + ".head", location);
-                player.sendMessage(PREFIX + "§7Make right click on a §esign§7.");
+                player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SETUP_CLICK_SIGN));
                 break;
             case SET_ALLTIME_SIGN:
             case SET_TIME_SIGN:
                 if (!(clickedBlock.getState() instanceof Sign)) {
-                    player.sendMessage(PREFIX + "§cMake right click on a sign.");
+                    player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.SETUP_NOT_A_SIGN));
                     return;
                 }
                 locationConfig.saveLocation(getStatsPath(setupState) + number + ".sign", location);
@@ -111,13 +111,11 @@ public class SetupListener implements Listener {
                 cookieClickerManager.loadStatsWallLocations();
                 StatsWallUpdater statsWallUpdater = plugin.getStatsWallUpdater();
                 if (setupState == ClickerGameProfile.SetupState.SET_ALLTIME_SIGN) {
-                    statsWallUpdater.getSortedAlltimeData().clear();
                     statsWallUpdater.updateAlltimeStatsWall();
                 } else {
-                    statsWallUpdater.getSortedTimedData().clear();
                     statsWallUpdater.updateTimeStatsWall();
                 }
-                player.sendMessage(PREFIX + "§7You have set the §bplace-" + number + "§7.");
+                player.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.WALL_PLACE_SET).replace("%number%", String.valueOf(number)));
                 break;
         }
     }

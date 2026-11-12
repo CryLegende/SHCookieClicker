@@ -1,17 +1,17 @@
 package de.zillolp.cookieclicker.config.customconfigs;
 
 import de.zillolp.cookieclicker.CookieClicker;
-import de.zillolp.cookieclicker.enums.CustomInventoryType;
-import de.zillolp.cookieclicker.enums.CustomItemType;
 import de.zillolp.cookieclicker.enums.CustomParticleEffectType;
 import de.zillolp.cookieclicker.enums.ShopType;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class PluginConfig extends CustomConfig {
-    private final String itemsPath = "items.";
-    private final String optionsPath = "options.";
 
     public PluginConfig(CookieClicker plugin, String name) {
         super(plugin, name);
@@ -92,31 +92,6 @@ public class PluginConfig extends CustomConfig {
         return fileConfiguration.getInt("Per click multiplier", 2);
     }
 
-    public int getRows(ShopType shopType) {
-        return fileConfiguration.getInt(optionsPath + shopType.getConfigSection() + ".rows", 6);
-    }
-
-    public int getStartSlot(ShopType shopType) {
-        return fileConfiguration.getInt(optionsPath + shopType.getConfigSection() + ".start_slot", 0);
-    }
-
-    public int getStopSlot(ShopType shopType) {
-        return fileConfiguration.getInt(optionsPath + shopType.getConfigSection() + ".stop_slot", 45);
-    }
-
-    public Integer[] getSkippedSlots(ShopType shopType) {
-        return fileConfiguration.getIntegerList(optionsPath + shopType.getConfigSection() + ".skipped_slots").toArray(new Integer[0]);
-    }
-
-    public Material getType(CustomInventoryType customInventoryType, CustomItemType customItemType) {
-        String typeName = fileConfiguration.getString(itemsPath + customInventoryType.name().toLowerCase() + "." + customItemType.name().toLowerCase() + ".item_type", Material.AIR.name());
-        Material type = Material.matchMaterial(typeName);
-        if (type == null) {
-            return Material.BARRIER;
-        }
-        return type;
-    }
-
     public Material getType(ShopType shopType, long id) {
         String typeName = getTypeName(shopType, id);
         if (typeName.equalsIgnoreCase("COOKIE_HEAD") || typeName.equalsIgnoreCase("REAL_PLAYER_HEAD")) {
@@ -162,16 +137,43 @@ public class PluginConfig extends CustomConfig {
         }
     }
 
-    public int getSlot(CustomInventoryType customInventoryType, CustomItemType customItemType) {
-        return fileConfiguration.getInt(itemsPath + customInventoryType.name().toLowerCase() + "." + customItemType.name().toLowerCase() + ".slot", 0);
-    }
-
     public long getBasePrice(ShopType shopType, int id) {
         return fileConfiguration.getLong(shopType.getConfigSection() + "." + id + ".base_price", 999999999);
     }
 
-    public double getPriceMultiplier(ShopType shopType, int id) {
-        return fileConfiguration.getDouble(shopType.getConfigSection() + "." + id + ".price_multiplier", 2.0);
+    public long getPriceStep(ShopType shopType, int id) {
+        return fileConfiguration.getLong(shopType.getConfigSection() + "." + id + ".price_step", 0);
+    }
+
+    /** Prix du prochain achat : prix de base, plus la hausse de chaque achat déjà fait (améliorations). */
+    public long getPrice(ShopType shopType, int id, long purchases) {
+        long basePrice = getBasePrice(shopType, id);
+        if (!(shopType.isRepeatable()) || purchases <= 0) {
+            return basePrice;
+        }
+        long step = getPriceStep(shopType, id);
+        if (step > 0 && purchases > (Long.MAX_VALUE - basePrice) / step) {
+            return Long.MAX_VALUE;
+        }
+        return basePrice + purchases * step;
+    }
+
+    /** Numéros des articles d'une boutique, dans l'ordre du fichier. */
+    public List<Integer> getShopIds(ShopType shopType) {
+        List<Integer> ids = new ArrayList<>();
+        for (String key : getConfigurationSection(shopType.getConfigSection())) {
+            try {
+                ids.add(Integer.parseInt(key));
+            } catch (NumberFormatException exception) {
+                plugin.getLogger().warning("Numéro d'article invalide dans " + shopType.getConfigSection() + " : " + key);
+            }
+        }
+        Collections.sort(ids);
+        return ids;
+    }
+
+    public boolean hasShopItem(ShopType shopType, int id) {
+        return fileConfiguration.contains(shopType.getConfigSection() + "." + id);
     }
 
     public long getAddClicks(ShopType shopType, int id) {
@@ -179,6 +181,6 @@ public class PluginConfig extends CustomConfig {
     }
 
     public String getDisplayName(ShopType shopType, int id) {
-        return fileConfiguration.getString(shopType.getConfigSection() + "." + id + ".display_name", "NULL");
+        return fileConfiguration.getString(shopType.getConfigSection() + "." + id + ".display_name", "?");
     }
 }

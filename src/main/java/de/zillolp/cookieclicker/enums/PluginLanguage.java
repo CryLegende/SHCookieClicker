@@ -1,15 +1,46 @@
 package de.zillolp.cookieclicker.enums;
 
+/** Clés de messages.yml. */
 public enum PluginLanguage {
     PREFIX,
     NO_PERMISSION,
     ONLY_PLAYER,
+    PLAYER_NOT_FOUND,
+    DATABASE_ERROR,
+    NOT_A_NUMBER,
+
+    // Command
     USAGE,
     SYNTAX,
     RELOAD_OK,
     RELOAD_RESTART,
     RELOAD_ERROR,
-    PLAYER_NOT_FOUND,
+    LIST_HEADER,
+    LIST_ENTRY,
+    LIST_HOVER,
+    LIST_COUNT_ONE,
+    LIST_COUNT_MANY,
+    MODIFY_BAD_TYPE,
+    MODIFY_DONE,
+    RESET_DONE,
+
+    // Setup
+    SETUP_CLICK_BLOCK,
+    SETUP_CLICK_HEAD,
+    SETUP_CLICK_SIGN,
+    SETUP_NOT_A_HEAD,
+    SETUP_NOT_A_SIGN,
+    SETUP_CANCELLED,
+    CLICKER_ALREADY,
+    CLICKER_SET,
+    CLICKER_REMOVED,
+    CLICKER_UNKNOWN,
+    WALL_PLACE_SET,
+    WALL_REMOVED,
+    WALL_REMOVE_ERROR,
+    RESETTIMER_SET,
+    RESETTIMER_REMOVED,
+    RESETTIMER_NOT_SET,
 
     // Network mode
     NETWORK_FORWARDED,
@@ -30,40 +61,9 @@ public enum PluginLanguage {
     AFK_MESSAGE,
     PLAYER_STATS_INFO,
 
-    // Inventory titles
-    HOME_TITLE,
-    SHOP_TITLE,
-    PREMIUM_SHOP_TITLE,
-    DESIGN_TITLE,
-    BLOCK_DESIGN_TITLE,
-    HIT_PARTICLE_DESIGN_TITLE,
-    MENU_DESIGN_TITLE,
-
-    // Item names
-    PER_CLICK,
-    YOUR_COOKIES,
-    SHOP,
-    DESIGN,
-    BLOCK_DESIGN,
-    HIT_PARTICLE_DESIGN,
-    MENU_DESIGN,
-    PREMIUM_PAGE,
-    NEXT,
-    BACK,
-
-    // Shop
-    PRICE_BUYABLE,
-    PRICE_NOT_BUYABLE,
-    PRICE_INFO,
-    ITEM_BOUGHT,
-    ITEM_BOUGHT_SELECTED,
-    ITEM_INFO,
-    ITEM_BOUGHT_INFO,
-    ITEM_BOUGHT_SELECTED_INFO,
+    // Shops
     MESSAGE_NOT_BUYABLE,
-
-    // Design
-    DESIGN_GLASS_NAME,
+    PREMIUM_REQUIRED,
 
     // Holograms
     CLICKER_HOLOGRAM,

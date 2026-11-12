@@ -22,6 +22,9 @@ public class EventUpdater extends CustomUpdater {
     @Override
     protected void tick() {
         HashMap<UUID, HashMap<ClickerEventType, ClickerEvent>> activeEvents = clickerEventManager.getActiveEvents();
+        if (activeEvents.isEmpty()) {
+            return;
+        }
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID uuid = player.getUniqueId();
             if (!activeEvents.containsKey(uuid)) {
@@ -49,6 +52,9 @@ public class EventUpdater extends CustomUpdater {
                     });
                 }
                 iterator.remove();
+            }
+            if (clickerEvents.isEmpty()) {
+                activeEvents.remove(uuid);
             }
         }
     }

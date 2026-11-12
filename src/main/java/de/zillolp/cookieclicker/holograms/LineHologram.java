@@ -18,7 +18,7 @@ public class LineHologram implements Hologram {
         uuid = UUID.randomUUID();
         currentLine = line;
         isSpawned = false;
-        hologram = plugin.getVersionManager().getHologram(line);
+        hologram = new PaperHologram(plugin, line);
     }
 
     @Override

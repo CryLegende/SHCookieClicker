@@ -29,14 +29,13 @@ public class RemoveSubCommand extends SubCommand {
 
     @Override
     public boolean onCommand(CookieClicker plugin, CommandSender commandSender, Command command, String[] args) {
-        String PREFIX = languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX);
         if (args.length == 2) {
             if (!(args[1].equalsIgnoreCase("resettimer"))) {
                 return false;
             }
             String locationName = "ResetTimer";
             if (!(locationConfig.isLocation(locationName))) {
-                commandSender.sendMessage(PREFIX + "§cThe resettimer is not set.");
+                commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.RESETTIMER_NOT_SET));
                 return true;
             }
             Location resetTimerLocation = locationConfig.getLocation("ResetTimer");
@@ -46,7 +45,7 @@ public class RemoveSubCommand extends SubCommand {
                 }
             }
             locationConfig.removeLocation(locationName);
-            commandSender.sendMessage(PREFIX + "§7You have §asuccessfully §7removed the §bresettimer§7.");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.RESETTIMER_REMOVED));
             return true;
         }
         if (args.length != 3) {
@@ -56,13 +55,13 @@ public class RemoveSubCommand extends SubCommand {
             return false;
         }
         if (!(isNumeric(args[2]))) {
-            commandSender.sendMessage(PREFIX + "§cYour input §4" + args[2] + " §cis not a number.");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.NOT_A_NUMBER).replace("%input%", args[2]));
             return true;
         }
         int number = Integer.parseInt(args[2]);
         String locationName = "CookieClicker.Clicker-" + number;
         if (!(locationConfig.isLocation(locationName))) {
-            commandSender.sendMessage(PREFIX + "§cThis CookieClicker does not exist.");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.CLICKER_UNKNOWN));
             return true;
         }
         Location location = locationConfig.getLocation(locationName);
@@ -74,7 +73,7 @@ public class RemoveSubCommand extends SubCommand {
         for (Player player : Bukkit.getOnlinePlayers()) {
             hologramManager.deleteHologramsByLocation(player, location);
         }
-        commandSender.sendMessage(PREFIX + "§7You deleted the the §bCookieClicker-" + number + "§7.");
+        commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.CLICKER_REMOVED).replace("%number%", String.valueOf(number)));
         return true;
     }
 

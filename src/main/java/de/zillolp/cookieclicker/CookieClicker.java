@@ -4,52 +4,45 @@ import de.zillolp.cookieclicker.commands.maincommands.CookieClickerCommand;
 import de.zillolp.cookieclicker.commands.subcommands.*;
 import de.zillolp.cookieclicker.config.ConfigManager;
 import de.zillolp.cookieclicker.config.customconfigs.*;
-import de.zillolp.cookieclicker.custominventories.CustomInventory;
 import de.zillolp.cookieclicker.database.DatabaseConnector;
 import de.zillolp.cookieclicker.database.DatabaseManager;
-import de.zillolp.cookieclicker.enums.CustomInventoryType;
 import de.zillolp.cookieclicker.handler.ClickerHandler;
-import de.zillolp.cookieclicker.interfaces.ItemBuilder;
-import de.zillolp.cookieclicker.interfaces.PacketReader;
 import de.zillolp.cookieclicker.listener.*;
-import de.zillolp.cookieclicker.listener.inventories.*;
 import de.zillolp.cookieclicker.manager.*;
+import de.zillolp.cookieclicker.menu.Menu;
+import de.zillolp.cookieclicker.menu.MenuListener;
 import de.zillolp.cookieclicker.network.NetworkCookies;
 import de.zillolp.cookieclicker.network.NetworkLink;
 import de.zillolp.cookieclicker.network.ShNetworkLink;
 import de.zillolp.cookieclicker.placeholder.PlaceholderListener;
-import de.zillolp.cookieclicker.profiles.ClickerInventoryProfile;
+import de.zillolp.cookieclicker.profiles.ClickerGameProfile;
+import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
 import de.zillolp.cookieclicker.runnables.*;
 import de.zillolp.cookieclicker.utils.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public class CookieClicker extends JavaPlugin {
+    private static final String[] LEGACY_DATA_FILES = {"cookieclicker.db", "locations.yml", "mysql.yml"};
     private final ArrayList<CustomUpdater> customUpdaters = new ArrayList<>();
     private PluginConfig pluginConfig;
     private LanguageConfig languageConfig;
+    private MenuConfig menuConfig;
     private LocationConfig locationConfig;
     private MySQLConfig mySQLConfig;
-    private VersionManager versionManager;
     private DatabaseConnector databaseConnector;
     private ConfigManager configManager;
     private DatabaseManager databaseManager;
@@ -60,31 +53,26 @@ public class CookieClicker extends JavaPlugin {
     private SoundManager soundManager;
     private ClickerEventManager clickerEventManager;
     private ReflectionUtil reflectionUtil;
-    private ItemBuilder itemBuilder;
     private ClickerHandler clickerHandler;
-    private PacketReader packetReader;
     private StatsWallUpdater statsWallUpdater;
     private ResetTimerUpdater resetTimerUpdater;
     // Non nul seulement avec SHNetwork : la progression est dans la base partagée
     private NetworkCookies networkCookies;
 
-    // Version SH : reprend les données de l'ancien plugin (plugins/CookieClicker : base, positions, configs) au
-    // premier démarrage. Copie seulement, l'ancien dossier reste en place pour un retour arrière.
+    // Version SH : au premier démarrage, reprend la base, les positions et les identifiants MySQL de l'ancien
+    // plugin (plugins/CookieClicker). Copie seulement, l'ancien dossier reste en place.
     @Override
     public void onLoad() {
         File dataFolder = getDataFolder();
         File oldFolder = new File(dataFolder.getParentFile(), "CookieClicker");
-        if (dataFolder.exists() || !(oldFolder.isDirectory())) {
+        if (dataFolder.exists() || !(oldFolder.isDirectory()) || !(dataFolder.mkdirs())) {
             return;
         }
-        Path oldPath = oldFolder.toPath();
-        try (Stream<Path> paths = Files.walk(oldPath)) {
-            for (Path source : (Iterable<Path>) paths::iterator) {
-                Path target = dataFolder.toPath().resolve(oldPath.relativize(source).toString());
-                if (Files.isDirectory(source)) {
-                    Files.createDirectories(target);
-                } else {
-                    Files.copy(source, target, StandardCopyOption.COPY_ATTRIBUTES);
+        try {
+            for (String fileName : LEGACY_DATA_FILES) {
+                File source = new File(oldFolder, fileName);
+                if (source.isFile()) {
+                    Files.copy(source.toPath(), new File(dataFolder, fileName).toPath(), StandardCopyOption.COPY_ATTRIBUTES);
                 }
             }
             getLogger().info("Données de CookieClicker reprises depuis " + oldFolder.getPath());
@@ -96,14 +84,12 @@ public class CookieClicker extends JavaPlugin {
     @Override
     public void onEnable() {
         registerConfigs();
-        if (!(checkCompatibility())) {
+        if (!(connectDatabase())) {
             return;
         }
         registerManager();
-        reflectionUtil = new ReflectionUtil(this);
+        reflectionUtil = new ReflectionUtil();
         clickerHandler = new ClickerHandler(this);
-        itemBuilder = versionManager.getItemBuilder();
-        packetReader = versionManager.getPacketReader();
         registerCommands();
         registerListener(Bukkit.getPluginManager());
         if (networkCookies != null) {
@@ -115,12 +101,13 @@ public class CookieClicker extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if ((!(versionManager.checkVersion())) || (!(databaseConnector.hasConnection()))) {
+        if (databaseConnector == null || !(databaseConnector.hasConnection()) || clickerPlayerManager == null) {
             return;
         }
         stopUpdaters();
         closeInventories();
         unloadPlayers();
+        saveProfiles();
         databaseConnector.close();
     }
 
@@ -128,6 +115,7 @@ public class CookieClicker extends JavaPlugin {
         configManager = new ConfigManager(this);
         pluginConfig = configManager.getPluginConfig();
         languageConfig = configManager.getLanguageConfig();
+        menuConfig = configManager.getMenuConfig();
         locationConfig = configManager.getLocationConfig();
         mySQLConfig = configManager.getMySQLConfig();
     }
@@ -161,45 +149,27 @@ public class CookieClicker extends JavaPlugin {
         }
     }
 
-    private void connectDatabase() {
-        if (connectNetworkDatabase()) {
-            return;
+    /** Connecte la base. Sans elle, seule la commande répond (elle le dit) et le plugin ne démarre pas le reste. */
+    private boolean connectDatabase() {
+        if (!(connectNetworkDatabase())) {
+            FileConfiguration mysqlConfiguration = mySQLConfig.getFileConfiguration();
+            databaseConnector = new DatabaseConnector(this, pluginConfig.getFileConfiguration().getBoolean("MySQL", false), "cookieclicker",
+                    mysqlConfiguration.getString("Host", "localhost"),
+                    mysqlConfiguration.getString("Port", "3306"),
+                    mysqlConfiguration.getString("Database", "cookieclicker"),
+                    mysqlConfiguration.getString("User", "root"),
+                    mysqlConfiguration.getString("Password", "123+"));
         }
-        FileConfiguration mysqlConfiguration = mySQLConfig.getFileConfiguration();
-        String serverName = mysqlConfiguration.getString("Host", "localhost");
-        String port = mysqlConfiguration.getString("Port", "25565");
-        String databaseName = mysqlConfiguration.getString("Database", "cookieclicker");
-        String user = mysqlConfiguration.getString("User", "root");
-        String password = mysqlConfiguration.getString("Password", "123+");
-        databaseConnector = new DatabaseConnector(this, pluginConfig.getFileConfiguration().getBoolean("MySQL", false), "cookieclicker", serverName, port, databaseName, user, password);
-    }
-
-    private boolean checkCompatibility() {
-        Logger logger = getLogger();
-        versionManager = new VersionManager(this);
-        boolean isConnected = false;
-        boolean isVersion = versionManager.checkVersion();
-        if (!(isVersion)) {
-            for (String wrongVersionMessage : versionManager.getWrongVersionMessage()) {
-                logger.warning(wrongVersionMessage);
-            }
-        } else {
-            connectDatabase();
-            isConnected = databaseConnector.hasConnection();
-            if (!(isConnected)) {
-                logger.log(Level.SEVERE, "Could not connect to Database!");
-                databaseConnector.close();
-            }
+        if (databaseConnector.hasConnection()) {
+            return true;
         }
-        boolean isCompatible = isVersion && isConnected;
-        if (!(isCompatible)) {
-            CookieClickerCommand cookieClickerCommand = new CookieClickerCommand(this);
-            PluginCommand cookieClickerPluginCommand = getCommand("shcookieclicker");
-            if (cookieClickerPluginCommand != null) {
-                cookieClickerPluginCommand.setExecutor(cookieClickerCommand);
-            }
+        getLogger().log(Level.SEVERE, "Connexion à la base impossible, le plugin reste inactif.");
+        databaseConnector.close();
+        PluginCommand pluginCommand = getCommand("shcookieclicker");
+        if (pluginCommand != null) {
+            pluginCommand.setExecutor(new CookieClickerCommand(this));
         }
-        return isCompatible;
+        return false;
     }
 
     private void registerManager() {
@@ -231,31 +201,27 @@ public class CookieClicker extends JavaPlugin {
 
     private void registerListener(PluginManager pluginManager) {
         pluginManager.registerEvents(new ClickerListener(this), this);
+        pluginManager.registerEvents(new PaperClickReader(this), this);
         pluginManager.registerEvents(new PlayerConnectionListener(this), this);
         pluginManager.registerEvents(new PlayerMovementListener(this), this);
         pluginManager.registerEvents(new SetupListener(this), this);
         pluginManager.registerEvents(new StatsWallListener(this), this);
         pluginManager.registerEvents(new CookieExplosionListener(this), this);
-        if (packetReader instanceof Listener clickReader) {
-            pluginManager.registerEvents(clickReader, this);
-        }
-        pluginManager.registerEvents(new HomeInventoryListener(this, CustomInventoryType.HOME), this);
-        pluginManager.registerEvents(new DesignInventoryListener(this, CustomInventoryType.DESIGN), this);
-        pluginManager.registerEvents(new HitParticleDesignInventoryListener(this, CustomInventoryType.HIT_PARTICLE_DESIGN), this);
-        pluginManager.registerEvents(new MenuDesignInventoryListener(this, CustomInventoryType.MENU_DESIGN), this);
-        pluginManager.registerEvents(new BlockDesignInventoryListener(this, CustomInventoryType.BLOCK_DESIGN), this);
-        pluginManager.registerEvents(new PremiumShopInventoryListener(this, CustomInventoryType.PREMIUM_SHOP), this);
-        pluginManager.registerEvents(new ShopInventoryListener(this, CustomInventoryType.SHOP), this);
+        pluginManager.registerEvents(new MenuListener(), this);
         if (pluginManager.getPlugin("PlaceholderAPI") != null) {
             new PlaceholderListener(this).register();
         }
     }
 
+    /** Lit la progression de tous les joueurs, puis prépare ceux qui sont déjà connectés (rechargement). */
     public void loadPlayers() {
-        databaseManager.loadProfiles();
+        clickerPlayerManager.loadProfiles();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            clickerPlayerManager.registerPlayer(player);
-            packetReader.inject(player);
+            UUID uuid = player.getUniqueId();
+            ClickerGameProfile clickerGameProfile = clickerPlayerManager.createGameProfile(uuid);
+            clickerPlayerManager.loadPlayerProfile(uuid, player.getName(), false);
+            clickerGameProfile.setLoaded(true);
+            hologramManager.spawnHolograms(player);
             designManager.sendClickerBlockDesign(player);
         }
     }
@@ -271,9 +237,6 @@ public class CookieClicker extends JavaPlugin {
         customUpdaters.add(statsWallUpdater);
         customUpdaters.add(resetTimerUpdater);
     }
-
-    // Version SH : pas de statistiques bStats, l'identifiant 11733 est celui du plugin original.
-
 
     private void stopUpdaters() {
         for (CustomUpdater customUpdater : customUpdaters) {
@@ -293,23 +256,27 @@ public class CookieClicker extends JavaPlugin {
         customUpdaters.add(new StatsUpdater(this, pluginConfig.getCacheSynchronizationTime()));
     }
 
+    /** Retire l'état de jeu des joueurs connectés (arrêt, rechargement). La progression reste en mémoire. */
     public void unloadPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             clickerEventManager.deactivateEvents(player.getUniqueId());
             clickerPlayerManager.unregisterPlayer(player);
-            packetReader.unInject(player);
+        }
+    }
+
+    /** Écrit tous les joueurs modifiés, sur le fil appelant : seulement à l'arrêt. */
+    private void saveProfiles() {
+        for (ClickerStatsProfile profile : clickerPlayerManager.getClickerStatsProfiles().values()) {
+            if (profile.isDirty()) {
+                databaseManager.saveProfile(profile);
+            }
         }
     }
 
     public void closeInventories() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            ClickerInventoryProfile clickerInventoryProfile = clickerPlayerManager.getInventoryProfile(player);
-            for (CustomInventory customInventory : clickerInventoryProfile.getCustomInventories().values()) {
-                Inventory inventory = reflectionUtil.getOpenInventory(player);
-                if (inventory != null && inventory == customInventory.getInventory()) {
-                    player.closeInventory();
-                    break;
-                }
+            if (player.getOpenInventory().getTopInventory().getHolder() instanceof Menu) {
+                player.closeInventory();
             }
         }
     }
@@ -327,12 +294,12 @@ public class CookieClicker extends JavaPlugin {
         return languageConfig;
     }
 
-    public LocationConfig getLocationConfig() {
-        return locationConfig;
+    public MenuConfig getMenuConfig() {
+        return menuConfig;
     }
 
-    public VersionManager getVersionManager() {
-        return versionManager;
+    public LocationConfig getLocationConfig() {
+        return locationConfig;
     }
 
     public DatabaseConnector getDatabaseConnector() {
@@ -375,16 +342,8 @@ public class CookieClicker extends JavaPlugin {
         return reflectionUtil;
     }
 
-    public ItemBuilder getItemBuilder() {
-        return itemBuilder;
-    }
-
     public ClickerHandler getClickerHandler() {
         return clickerHandler;
-    }
-
-    public PacketReader getPacketReader() {
-        return packetReader;
     }
 
     public StatsWallUpdater getStatsWallUpdater() {

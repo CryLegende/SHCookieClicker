@@ -1,7 +1,6 @@
 package de.zillolp.cookieclicker.customparticles;
 
 import de.zillolp.cookieclicker.CookieClicker;
-import de.zillolp.cookieclicker.manager.VersionManager;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -40,13 +39,7 @@ public abstract class CustomParticleEffect implements Runnable {
 
     protected void sendParticle(Location location, Particle particle, int amount, double motionX, double motionY, double motionZ, double speed) {
         if (coloredDust) {
-            VersionManager versionManager = plugin.getVersionManager();
-            Particle.DustOptions dustOptions = new Particle.DustOptions(color, 1);
-            if (versionManager.getVersionNumber() <= 20 && versionManager.getSubVersion() <= 5) {
-                player.spawnParticle(Particle.valueOf("REDSTONE"), location, amount, dustOptions);
-                return;
-            }
-            player.spawnParticle(Particle.DUST, location, amount, dustOptions);
+            player.spawnParticle(Particle.DUST, location, amount, new Particle.DustOptions(color, 1));
             return;
         }
 

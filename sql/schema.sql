@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS bo_net.cookieclicker_shops (
     UUID            VARCHAR(64) NOT NULL,
     SHOP_ID         VARCHAR(64) NOT NULL,
     ID              INTEGER NOT NULL,
-    ITEMS_PURCHASED BIGINT NOT NULL,
+    ITEMS_PURCHASED BIGINT NOT NULL,                 -- nombre d'achats de l'article (1 pour un design acheté)
     PRIMARY KEY (UUID, SHOP_ID, ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

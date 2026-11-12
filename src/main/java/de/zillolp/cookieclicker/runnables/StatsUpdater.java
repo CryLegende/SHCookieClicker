@@ -4,8 +4,6 @@ import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.database.DatabaseManager;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
 import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 public class StatsUpdater extends CustomUpdater {
     private final DatabaseManager databaseManager;
@@ -19,10 +17,9 @@ public class StatsUpdater extends CustomUpdater {
 
     @Override
     protected void tick() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            ClickerStatsProfile profile = clickerPlayerManager.getStatsProfile(player.getUniqueId());
-            if (profile != null && profile.isDirty()) {
-                databaseManager.saveClickerStatsProfile(profile);
+        for (ClickerStatsProfile profile : clickerPlayerManager.getClickerStatsProfiles().values()) {
+            if (profile.isDirty()) {
+                databaseManager.saveProfile(profile);
             }
         }
     }

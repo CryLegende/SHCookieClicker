@@ -3,6 +3,7 @@ package de.zillolp.cookieclicker.runnables;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.config.customconfigs.LanguageConfig;
 import de.zillolp.cookieclicker.config.customconfigs.LocationConfig;
+import de.zillolp.cookieclicker.config.customconfigs.PluginConfig;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
 import de.zillolp.cookieclicker.holograms.LineHologram;
 import de.zillolp.cookieclicker.holograms.TextHologram;
@@ -16,7 +17,9 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.UUID;
 
+/** Rafraîchit chaque seconde les hologrammes des clickers (si activés) et le chronomètre de réinitialisation (si posé). */
 public class HologramUpdater extends CustomUpdater {
+    private final PluginConfig pluginConfig;
     private final LanguageConfig languageConfig;
     private final LocationConfig locationConfig;
     private final CookieClickerManager cookieClickerManager;
@@ -24,7 +27,8 @@ public class HologramUpdater extends CustomUpdater {
     private final ResetTimerUpdater resetTimerUpdater;
 
     public HologramUpdater(CookieClicker plugin) {
-        super(plugin, true, 1);
+        super(plugin, false, 20);
+        pluginConfig = plugin.getPluginConfig();
         languageConfig = plugin.getLanguageConfig();
         locationConfig = plugin.getLocationConfig();
         cookieClickerManager = plugin.getCookieClickerManager();
@@ -34,26 +38,31 @@ public class HologramUpdater extends CustomUpdater {
 
     @Override
     protected void tick() {
+        boolean clickerHolograms = pluginConfig.hasClickerHolograms();
+        Location resetTimerLocation = locationConfig.isLocation("ResetTimer") ? locationConfig.getLocation("ResetTimer") : null;
+        if (!(clickerHolograms) && resetTimerLocation == null) {
+            return;
+        }
         ArrayList<Location> clickerLocations = cookieClickerManager.getClickerLocations();
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID uuid = player.getUniqueId();
-            for (Location location : clickerLocations) {
-                for (Hologram hologram : hologramManager.getHologramsByLocation(uuid, location)) {
-                    if (hologram instanceof TextHologram) {
-                        TextHologram textHologram = (TextHologram) hologram;
-                        textHologram.changeLines(player, languageConfig.getReplaceLanguages(PluginLanguage.CLICKER_HOLOGRAM, uuid));
+            if (clickerHolograms) {
+                String[] lines = languageConfig.getReplaceLanguages(PluginLanguage.CLICKER_HOLOGRAM, uuid);
+                for (Location location : clickerLocations) {
+                    for (Hologram hologram : hologramManager.getHologramsByLocation(uuid, location.clone().add(0.5, 1, 0.5))) {
+                        if (hologram instanceof TextHologram textHologram) {
+                            textHologram.changeLines(player, lines);
+                        }
                     }
                 }
             }
-            Location resetTimerLocation = locationConfig.getLocation("ResetTimer");
             if (resetTimerLocation == null) {
                 continue;
             }
             String resetTimerLine = languageConfig.formatTime(languageConfig.getReplacedLanguage(PluginLanguage.RESET_TIMER, uuid), resetTimerUpdater.getTime());
             boolean foundResetTimer = false;
             for (Hologram resetTimerHologram : hologramManager.getHologramsByLocation(uuid, resetTimerLocation)) {
-                if (resetTimerHologram instanceof LineHologram) {
-                    LineHologram lineHologram = (LineHologram) resetTimerHologram;
+                if (resetTimerHologram instanceof LineHologram lineHologram) {
                     lineHologram.changeLine(player, resetTimerLine);
                     foundResetTimer = true;
                     break;

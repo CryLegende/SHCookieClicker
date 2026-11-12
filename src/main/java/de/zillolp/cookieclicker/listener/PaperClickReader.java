@@ -2,7 +2,6 @@ package de.zillolp.cookieclicker.listener;
 
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.customevents.CookieClickerInteractEvent;
-import de.zillolp.cookieclicker.interfaces.PacketReader;
 import de.zillolp.cookieclicker.manager.CookieClickerManager;
 import de.zillolp.cookieclicker.profiles.ClickerGameProfile;
 import de.zillolp.cookieclicker.utils.ReflectionUtil;
@@ -28,7 +27,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
  * - le clic droit (UseItemOn) est traité par ClickerListener.
  * Les événements sont lus même s'ils ont été annulés (protection de zone), comme les paquets l'étaient.
  */
-public class PaperClickReader implements PacketReader, Listener {
+public class PaperClickReader implements Listener {
     private final CookieClicker plugin;
     private final ReflectionUtil reflectionUtil;
     private final CookieClickerManager cookieClickerManager;
@@ -37,15 +36,6 @@ public class PaperClickReader implements PacketReader, Listener {
         this.plugin = plugin;
         reflectionUtil = plugin.getReflectionUtil();
         cookieClickerManager = plugin.getCookieClickerManager();
-    }
-
-    @Override
-    public void inject(Player player) {
-        // rien à injecter : les clics arrivent par les événements Bukkit
-    }
-
-    @Override
-    public void unInject(Player player) {
     }
 
     private boolean isClicker(Location location) {

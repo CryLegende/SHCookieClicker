@@ -3,7 +3,6 @@ package de.zillolp.cookieclicker.commands.maincommands;
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.commands.subcommands.SubCommand;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
-import de.zillolp.cookieclicker.manager.VersionManager;
 import de.zillolp.cookieclicker.profiles.ClickerGameProfile;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -13,24 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CookieClickerCommand extends MainCommand {
-    private final VersionManager versionManager;
-
     public CookieClickerCommand(CookieClicker plugin) {
         super(plugin);
-        versionManager = plugin.getVersionManager();
     }
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
-        String PREFIX = languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX);
-        if (!(versionManager.checkVersion())) {
-            for (String wrongVersionMessage : versionManager.getWrongVersionMessage()) {
-                commandSender.sendMessage(PREFIX + wrongVersionMessage);
-            }
-            return true;
-        }
         if (!(plugin.getDatabaseConnector().hasConnection())) {
-            commandSender.sendMessage(PREFIX + "§cThe plugin isn't connected to the database!");
+            commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.DATABASE_ERROR));
             return true;
         }
         List<String> allowed = new ArrayList<>();

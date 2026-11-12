@@ -2,6 +2,7 @@ package de.zillolp.cookieclicker.commands.subcommands;
 
 import de.zillolp.cookieclicker.CookieClicker;
 import de.zillolp.cookieclicker.database.DatabaseConnector;
+import de.zillolp.cookieclicker.database.DatabaseManager;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -68,6 +69,7 @@ public class ImportSubCommand extends SubCommand {
         int imported = 0;
         int present = 0;
         try (Connection from = sqlite.getConnection(); Connection to = plugin.getDatabaseConnector().getConnection()) {
+            DatabaseManager.migrateLegacyShops(from, plugin.getPluginConfig(), plugin.getLogger());
             try (PreparedStatement select = from.prepareStatement("SELECT UUID, NAME, COOKIES, PER_CLICK, CLICKER_CLICKS, BLOCK_DESIGN, PARTICLE_DESIGN, MENU_DESIGN FROM cookieclicker_players");
                  PreparedStatement insert = to.prepareStatement("INSERT IGNORE INTO cookieclicker_players (UUID, NAME, COOKIES, PER_CLICK, CLICKER_CLICKS, BLOCK_DESIGN, PARTICLE_DESIGN, MENU_DESIGN) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                  ResultSet rows = select.executeQuery()) {

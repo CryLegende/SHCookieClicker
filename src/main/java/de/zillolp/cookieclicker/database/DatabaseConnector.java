@@ -13,10 +13,12 @@ import java.util.logging.Logger;
 public class DatabaseConnector {
     private final Logger logger;
     private final HikariDataSource hikariDataSource = new HikariDataSource();
+    private final boolean mySQL;
     private boolean isConnected = false;
 
     public DatabaseConnector(CookieClicker plugin, boolean useMySQL, String filename, String serverName, String port, String databaseName, String user, String password) {
         logger = plugin.getLogger();
+        mySQL = useMySQL;
         try {
             if (useMySQL) {
                 configureMySQLDataSource(serverName, port, databaseName, user, password);
@@ -26,10 +28,10 @@ public class DatabaseConnector {
             configureHikariCP();
             testConnection();
         } catch (IllegalStateException | IllegalArgumentException exception) {
-            logger.log(Level.SEVERE, "Failed to initialize database connection - configuration error", exception);
+            logger.log(Level.SEVERE, "Connexion à la base impossible (configuration) : ", exception);
             isConnected = false;
         } catch (RuntimeException exception) {
-            logger.log(Level.SEVERE, "Failed to initialize database connection - runtime error", exception);
+            logger.log(Level.SEVERE, "Connexion à la base impossible : ", exception);
             isConnected = false;
         }
     }
@@ -48,14 +50,14 @@ public class DatabaseConnector {
         if (!(databaseFile.exists())) {
             File parentDir = databaseFile.getParentFile();
             if (parentDir != null && !parentDir.exists() && !parentDir.mkdirs()) {
-                logger.log(Level.SEVERE, "Could not create database directory: " + parentDir.getAbsolutePath());
+                logger.log(Level.SEVERE, "Dossier de la base impossible à créer : " + parentDir.getAbsolutePath());
             }
             try {
                 if (!(databaseFile.createNewFile())) {
-                    logger.log(Level.SEVERE, "Could not create database file: " + databaseFile.getAbsolutePath());
+                    logger.log(Level.SEVERE, "Fichier de la base impossible à créer : " + databaseFile.getAbsolutePath());
                 }
             } catch (IOException exception) {
-                logger.log(Level.SEVERE, "Error creating database file: " + databaseFile.getAbsolutePath());
+                logger.log(Level.SEVERE, "Fichier de la base impossible à créer : " + databaseFile.getAbsolutePath());
             }
         }
         hikariDataSource.setJdbcUrl("jdbc:sqlite:" + databaseFile.getAbsolutePath());
@@ -63,15 +65,17 @@ public class DatabaseConnector {
         hikariDataSource.addDataSourceProperty("synchronous", "NORMAL");
         hikariDataSource.addDataSourceProperty("cache_size", "10000");
         hikariDataSource.addDataSourceProperty("temp_store", "memory");
+        // Un fichier SQLite n'a qu'un seul écrivain : une connexion unique évite « database is locked »
+        hikariDataSource.addDataSourceProperty("busy_timeout", "10000");
     }
 
     private void configureHikariCP() {
-        hikariDataSource.setMinimumIdle(2);
-        hikariDataSource.setMaximumPoolSize(10);
-        hikariDataSource.setConnectionTimeout(30000); // 30 Sekunden
-        hikariDataSource.setIdleTimeout(600000); // 10 Minuten
-        hikariDataSource.setMaxLifetime(1800000); // 30 Minuten
-        hikariDataSource.setLeakDetectionThreshold(60000); // 1 Minute
+        hikariDataSource.setMinimumIdle(mySQL ? 2 : 1);
+        hikariDataSource.setMaximumPoolSize(mySQL ? 10 : 1);
+        hikariDataSource.setConnectionTimeout(30000);
+        hikariDataSource.setIdleTimeout(600000);
+        hikariDataSource.setMaxLifetime(1800000);
+        hikariDataSource.setLeakDetectionThreshold(60000);
         hikariDataSource.setPoolName("CookieClicker-HikariCP");
 
         hikariDataSource.setConnectionTestQuery("SELECT 1");
@@ -82,7 +86,7 @@ public class DatabaseConnector {
             isConnected = connection.isValid(5);
         } catch (SQLException exception) {
             isConnected = false;
-            logger.log(Level.SEVERE, "Database connection test failed", exception);
+            logger.log(Level.SEVERE, "Test de la connexion à la base échoué : ", exception);
         }
     }
 
@@ -93,14 +97,17 @@ public class DatabaseConnector {
         hikariDataSource.close();
     }
 
+    public boolean isMySQL() {
+        return mySQL;
+    }
+
     public boolean hasConnection() {
         return isConnected && !hikariDataSource.isClosed();
     }
 
     public Connection getConnection() throws SQLException {
         if (hikariDataSource.isClosed()) {
-            logger.log(Level.SEVERE, "DataSource is already closed");
-            throw new SQLException("DataSource is already closed");
+            throw new SQLException("La connexion à la base est déjà fermée");
         }
         return hikariDataSource.getConnection();
     }

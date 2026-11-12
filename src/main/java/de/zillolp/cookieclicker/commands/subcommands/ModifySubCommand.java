@@ -1,33 +1,26 @@
 package de.zillolp.cookieclicker.commands.subcommands;
 
 import de.zillolp.cookieclicker.CookieClicker;
-import de.zillolp.cookieclicker.custominventories.CustomInventory;
 import de.zillolp.cookieclicker.database.DatabaseManager;
 import de.zillolp.cookieclicker.enums.PluginLanguage;
 import de.zillolp.cookieclicker.manager.ClickerPlayerManager;
-import de.zillolp.cookieclicker.profiles.ClickerInventoryProfile;
+import de.zillolp.cookieclicker.menu.Menu;
 import de.zillolp.cookieclicker.profiles.ClickerStatsProfile;
-import de.zillolp.cookieclicker.utils.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Level;
 
 public class ModifySubCommand extends SubCommand {
-    private final ReflectionUtil reflectionUtil;
     private final DatabaseManager databaseManager;
     private final ClickerPlayerManager clickerPlayerManager;
 
     public ModifySubCommand(CookieClicker plugin, String mainCommand, String... subCommands) {
         super(plugin, mainCommand, subCommands);
-        reflectionUtil = plugin.getReflectionUtil();
         databaseManager = plugin.getDatabaseManager();
         clickerPlayerManager = plugin.getClickerPlayerManager();
     }
@@ -36,23 +29,18 @@ public class ModifySubCommand extends SubCommand {
         if (args.length != 5) {
             return false;
         }
-        if (!(databaseManager.playerExists(args[1]))) {
+        ClickerStatsProfile clickerStatsProfile = clickerPlayerManager.findOrLoadProfile(args[1]);
+        if (clickerStatsProfile == null) {
             commandSender.sendMessage(languageConfig.getLanguageWithPrefix(PluginLanguage.PLAYER_NOT_FOUND));
             return true;
         }
-        String PREFIX = languageConfig.getTranslatedLanguage(PluginLanguage.PREFIX);
-        Optional<UUID> uuidOptional = databaseManager.getUUIDbyName(args[1]);
-        if (!(uuidOptional.isPresent())) {
-            plugin.getLogger().log(Level.SEVERE, "Error getting UUID of Player: " + args[1]);
-            return false;
-        }
         String type = args[3].toUpperCase();
-        if ((!(type.equalsIgnoreCase("COOKIES"))) && (!(type.equalsIgnoreCase("PER_CLICK"))) && (!(type.equalsIgnoreCase("CLICKER_CLICKS")))) {
-            commandSender.sendMessage(PREFIX + "§cYour input §4" + args[3] + " §cis not a value type!");
+        if ((!(type.equals("COOKIES"))) && (!(type.equals("PER_CLICK"))) && (!(type.equals("CLICKER_CLICKS")))) {
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.MODIFY_BAD_TYPE).replace("%input%", args[3]));
             return true;
         }
         if (!(isNumeric(args[4]))) {
-            commandSender.sendMessage(PREFIX + "§cYour input §4" + args[4] + " §cis not a number!");
+            commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.NOT_A_NUMBER).replace("%input%", args[4]));
             return true;
         }
 
@@ -61,25 +49,17 @@ public class ModifySubCommand extends SubCommand {
             return true;
         }
 
-        UUID uuid = uuidOptional.get();
+        UUID uuid = clickerStatsProfile.getUuid();
         Player player = Bukkit.getPlayer(uuid);
-        if (player != null && Bukkit.getOnlinePlayers().contains(player)) {
-            ClickerInventoryProfile clickerInventoryProfile = clickerPlayerManager.getInventoryProfile(player);
-            for (CustomInventory customInventory : clickerInventoryProfile.getCustomInventories().values()) {
-                Inventory inventory = reflectionUtil.getOpenInventory(player);
-                if (inventory != null && inventory == customInventory.getInventory()) {
-                    player.closeInventory();
-                    break;
-                }
-            }
+        if (player != null && player.getOpenInventory().getTopInventory().getHolder() instanceof Menu) {
+            player.closeInventory();
         }
 
         long value = Long.parseLong(args[4]);
-        ClickerStatsProfile clickerStatsProfile = clickerPlayerManager.getStatsProfile(uuidOptional.get());
         if (plugin.getNetwork() != null && player == null) {
             // Mode réseau : joueur connecté nulle part, son profil en mémoire peut dater d'avant sa dernière partie
             // sur un autre serveur : on repart de la base
-            databaseManager.loadClickerStatsProfile(clickerStatsProfile, false);
+            databaseManager.reloadProfile(clickerStatsProfile);
         }
         switch (args[2].toUpperCase()) {
             case "ADD":
@@ -94,8 +74,8 @@ public class ModifySubCommand extends SubCommand {
             default:
                 return false;
         }
-        databaseManager.saveClickerStatsProfile(clickerStatsProfile);
-        commandSender.sendMessage(PREFIX + "§7You have modified §7the §6" + type + " §7from §e" + clickerStatsProfile.getName() + "§7.");
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> databaseManager.saveProfile(clickerStatsProfile));
+        commandSender.sendMessage(languageConfig.getTranslatedLanguage(PluginLanguage.MODIFY_DONE).replace("%type%", type).replace("%player%", clickerStatsProfile.getName()));
         return true;
     }
 
