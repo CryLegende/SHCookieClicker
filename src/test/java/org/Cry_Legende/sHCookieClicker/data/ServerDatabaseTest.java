@@ -42,11 +42,11 @@ class ServerDatabaseTest {
             database.createSchema();
             LegacyShopMigration.Result migrated;
             try (Connection connection = database.connection()) {
-                migrated = LegacyShopMigration.run(connection, LegacyShopMigration.lookup(panes()), LOGGER);
+                migrated = LegacyShopMigration.run(connection, LOGGER);
             }
             System.out.println("Reprise 4.8 : " + (migrated == null ? "déjà faite" : migrated));
             try (Connection connection = database.connection()) {
-                LegacyShopMigration.Result again = LegacyShopMigration.run(connection, LegacyShopMigration.lookup(panes()), LOGGER);
+                LegacyShopMigration.Result again = LegacyShopMigration.run(connection, LOGGER);
                 assertEquals(null, again, "la reprise ne se fait qu'une fois");
             }
 
@@ -87,19 +87,6 @@ class ServerDatabaseTest {
                 statement.execute("DETACH DATABASE neuve");
             }
         }
-    }
-
-    private static Map<String, Integer> panes() throws Exception {
-        YamlConfiguration config = new YamlConfiguration();
-        try (InputStreamReader reader = new InputStreamReader(ServerDatabaseTest.class.getResourceAsStream("/config.yml"), StandardCharsets.UTF_8)) {
-            config.load(reader);
-        }
-        Map<String, Integer> panes = new HashMap<>();
-        ConfigurationSection section = config.getConfigurationSection("designs.fonds");
-        for (String id : section.getKeys(false)) {
-            panes.put(section.getString(id + ".vitre"), Integer.parseInt(id));
-        }
-        return panes;
     }
 
     private static long count(Database database, String sql) throws SQLException {

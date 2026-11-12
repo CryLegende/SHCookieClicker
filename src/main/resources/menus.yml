@@ -2,9 +2,9 @@
 #  SHCookieClicker : menus
 # ============================================================================
 #  Mise en page des menus de SkyHand : titre « &8&lMenu &8| Nom », cadre de
-#  vitres (le fond, remplacé par le design « fond » choisi par le joueur),
-#  vitres grises en accent, « Retour » en papier au centre de la dernière
-#  ligne, flèches de page de part et d'autre du retour.
+#  vitres noires (fond), vitres grises en accent, « Retour » en papier au
+#  centre de la dernière ligne, flèches de page de part et d'autre du retour
+#  quand une boutique a plus d'articles que de cases.
 #
 #  Cases : un numéro, ou une liste et des plages : « 10-16, 19-25 ».
 #  Placeholders :
@@ -72,8 +72,8 @@ accueil:
     nom: '&bDesigns'
     lore:
       - ''
-      - '&8&l« &7L''apparence du clicker, de vos'
-      - '&7clics et des menus. &8&l»'
+      - '&8&l« &7L''apparence du clicker et'
+      - '&7de vos clics. &8&l»'
       - ''
       - '&7&o(( &b&oCliquez &7&opour choisir vos designs &7&o))'
 
@@ -131,10 +131,10 @@ amelioration:
 designs:
   titre: '&8&lMenu &8| Designs'
   lignes: 3
-  accents: 10, 12, 14, 16
+  accents: 11, 13, 15
   retour: 22
   blocs:
-    case: 11
+    case: 12
     materiau: PRISMARINE
     nom: '&bBloc du clicker'
     lore:
@@ -144,7 +144,7 @@ designs:
       - ''
       - '&7&o(( &b&oCliquez &7&opour choisir &7&o))'
   effets:
-    case: 13
+    case: 14
     materiau: DRAGON_BREATH
     nom: '&dEffet de coup'
     lore:
@@ -153,16 +153,6 @@ designs:
       - '&7vos clics sur le clicker. &8&l»'
       - ''
       - '&7&o(( &d&oCliquez &7&opour choisir &7&o))'
-  fonds:
-    case: 15
-    materiau: PAINTING
-    nom: '&eFond des menus'
-    lore:
-      - ''
-      - '&8&l« &7La couleur des vitres qui'
-      - '&7entourent ces menus. &8&l»'
-      - ''
-      - '&7&o(( &e&oCliquez &7&opour choisir &7&o))'
 
 designs-blocs:
   titre: '&8&lMenu &8| Bloc du clicker'
@@ -180,17 +170,7 @@ designs-effets:
   fiche: 4
   retour: 31
 
-designs-fonds:
-  titre: '&8&lMenu &8| Fond des menus &8({page}/{pages})'
-  lignes: 5
-  articles: 10-16, 19-25, 28-34
-  accents: 3, 5
-  fiche: 4
-  retour: 40
-  page-precedente: 39
-  page-suivante: 41
-
-# Article des trois menus de designs, selon son état.
+# Article des menus de designs, selon son état.
 design:
   nom-achetable: '&a{nom}'
   nom-trop-cher: '&c{nom}'

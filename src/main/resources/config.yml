@@ -5,7 +5,7 @@
 #  Clic gauche sur un clicker : des cookies (autant que les cookies par clic
 #  du joueur). Clic droit : le menu, avec la boutique d'améliorations (des
 #  cookies par clic en plus, prix qui monte à chaque achat), la boutique
-#  VipElite et les designs (bloc du clicker, effet de coup, fond des menus).
+#  VipElite et les designs (bloc du clicker, effet de coup).
 #  Au hasard d'un clic : le cookie doré (clics multipliés un moment) ou
 #  l'explosion de cookies (des cookies à ramasser, visibles du seul joueur).
 #  Un clic au-delà du nombre de clics par seconde permis, ou d'un joueur qui
@@ -49,7 +49,6 @@
 #      effets   animation (SPIRALE, ANNEAUX, ONDE, ETOILE, TOURBILLON), particule,
 #               particule-secondaire (TOURBILLON), couleur '#RRGGBB' (poussière colorée à la
 #               place de la particule). Effet vu du seul joueur, au plus un à la fois.
-#      fonds    vitre qui entoure les menus (le noir est le fond par défaut).
 #    Le numéro d'un article est sa clé dans la base : ne pas renuméroter.
 #
 #  Sons : clé de son (entity.item.pickup, minecraft:entity.item.pickup ou la clé d'un son
@@ -246,71 +245,6 @@ designs:
       particule: DRAGON_BREATH
       particule-secondaire: ENCHANT
       prix: 500000
-  fonds:
-    1:
-      nom: Verre transparent
-      vitre: GLASS_PANE
-      prix: 999999
-    3:
-      nom: Verre gris
-      vitre: GRAY_STAINED_GLASS_PANE
-      prix: 200000
-    4:
-      nom: Verre gris clair
-      vitre: LIGHT_GRAY_STAINED_GLASS_PANE
-      prix: 300000
-    5:
-      nom: Verre blanc
-      vitre: WHITE_STAINED_GLASS_PANE
-      prix: 400000
-    6:
-      nom: Verre bleu
-      vitre: BLUE_STAINED_GLASS_PANE
-      prix: 500000
-    7:
-      nom: Verre bleu clair
-      vitre: LIGHT_BLUE_STAINED_GLASS_PANE
-      prix: 600000
-    8:
-      nom: Verre cyan
-      vitre: CYAN_STAINED_GLASS_PANE
-      prix: 700000
-    9:
-      nom: Verre vert
-      vitre: GREEN_STAINED_GLASS_PANE
-      prix: 800000
-    10:
-      nom: Verre vert clair
-      vitre: LIME_STAINED_GLASS_PANE
-      prix: 900000
-    11:
-      nom: Verre marron
-      vitre: BROWN_STAINED_GLASS_PANE
-      prix: 1000000
-    12:
-      nom: Verre violet
-      vitre: PURPLE_STAINED_GLASS_PANE
-      prix: 1100000
-    13:
-      nom: Verre magenta
-      vitre: MAGENTA_STAINED_GLASS_PANE
-      prix: 1200000
-    14:
-      nom: Verre rose
-      vitre: PINK_STAINED_GLASS_PANE
-      prix: 1300000
-    15:
-      nom: Verre jaune
-      vitre: YELLOW_STAINED_GLASS_PANE
-      prix: 1400000
-    16:
-      nom: Verre orange
-      vitre: ORANGE_STAINED_GLASS_PANE
-      prix: 1500000
-    17:
-      nom: Verre rouge
-      vitre: RED_STAINED_GLASS_PANE
-      prix: 1600000
 
 # Chaque son répond à une action du joueur.
 #   clic             un clic qui compte          clic-refuse      un clic refusé (trop rapide, immobile)

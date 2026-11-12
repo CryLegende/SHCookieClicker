@@ -6,14 +6,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
  * Boutique de CookieClicker 4.8 (table cookieclicker_players_v4, fichier SQLite seulement). La 4.8 gardait le prix
  * courant de chacune des 14 améliorations, prix qui montait de 115 × gain à chaque achat : le nombre d'achats s'en
- * déduit exactement. Le fond de menu choisi dans la 4.8 (gratuit alors) devient un fond acheté et sélectionné ; le
- * noir, fond par défaut, n'est pas un design. Une seule fois : repère « shop-v4 » dans cookieclicker_migrations.
+ * déduit exactement. Le fond de menu choisi dans la 4.8 (gratuit alors) est noté comme dans la 5.9 (MENU_DESIGN, ligne
+ * MENU_DESIGN de cookieclicker_shops) ; la 2.0 n'a plus de fonds de menu et n'en lit rien. Une seule fois : repère
+ * « shop-v4 » dans cookieclicker_migrations.
  */
 public final class LegacyShopMigration {
     public static final String MARKER = "shop-v4";
@@ -32,11 +32,17 @@ public final class LegacyShopMigration {
     public record Result(int purchaseRows, int players, int menuDesigns, int unreadable) {
     }
 
-    /**
-     * @param menuDesignOfPane numéro du fond de menu d'une vitre (GRAY_STAINED_GLASS_PANE), ou null
-     * @return null si la reprise est déjà faite ou s'il n'y a pas de table 4.8
-     */
-    public static Result run(Connection connection, Function<String, Integer> menuDesignOfPane, Logger logger) throws SQLException {
+    /** Numéros des fonds de menu de la boutique 5.9 (le noir, fond par défaut, n'en avait pas). */
+    private static final Map<String, Integer> MENU_DESIGNS = Map.ofEntries(
+            Map.entry("GLASS_PANE", 1), Map.entry("GRAY_STAINED_GLASS_PANE", 3), Map.entry("LIGHT_GRAY_STAINED_GLASS_PANE", 4),
+            Map.entry("WHITE_STAINED_GLASS_PANE", 5), Map.entry("BLUE_STAINED_GLASS_PANE", 6), Map.entry("LIGHT_BLUE_STAINED_GLASS_PANE", 7),
+            Map.entry("CYAN_STAINED_GLASS_PANE", 8), Map.entry("GREEN_STAINED_GLASS_PANE", 9), Map.entry("LIME_STAINED_GLASS_PANE", 10),
+            Map.entry("BROWN_STAINED_GLASS_PANE", 11), Map.entry("PURPLE_STAINED_GLASS_PANE", 12), Map.entry("MAGENTA_STAINED_GLASS_PANE", 13),
+            Map.entry("PINK_STAINED_GLASS_PANE", 14), Map.entry("YELLOW_STAINED_GLASS_PANE", 15), Map.entry("ORANGE_STAINED_GLASS_PANE", 16),
+            Map.entry("RED_STAINED_GLASS_PANE", 17));
+
+    /** @return null si la reprise est déjà faite ou s'il n'y a pas de table 4.8 */
+    public static Result run(Connection connection, Logger logger) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS " + Database.MIGRATIONS + "(NAME VARCHAR(64) NOT NULL PRIMARY KEY)");
         }
@@ -63,7 +69,7 @@ public final class LegacyShopMigration {
                 if (counts[0] > 0) {
                     players++;
                 }
-                Integer designId = menuDesignOfPane.apply(paneOf(rows.getString("DESIGN")));
+                Integer designId = MENU_DESIGNS.get(paneOf(rows.getString("DESIGN")));
                 if (designId != null) {
                     design.setInt(1, designId);
                     design.setString(2, uuid);
@@ -141,10 +147,5 @@ public final class LegacyShopMigration {
                 return rows.next();
             }
         }
-    }
-
-    /** Vitre de chaque fond : pour {@link #run}. */
-    public static Function<String, Integer> lookup(Map<String, Integer> paneToId) {
-        return pane -> paneToId.get(pane);
     }
 }

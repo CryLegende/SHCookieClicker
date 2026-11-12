@@ -272,10 +272,10 @@ public final class SHCookieClicker extends JavaPlugin {
 
     private void migrateLegacyShop(Database sqlite) throws SQLException {
         try (Connection connection = sqlite.connection()) {
-            LegacyShopMigration.Result result = LegacyShopMigration.run(connection, LegacyShopMigration.lookup(settings.backgroundIdsByPane()), getLogger());
+            LegacyShopMigration.Result result = LegacyShopMigration.run(connection, getLogger());
             if (result != null) {
                 getLogger().info("Boutique de CookieClicker 4.8 reprise : " + result.purchaseRows() + " achats de " + result.players()
-                        + " joueurs, " + result.menuDesigns() + " fonds de menu, " + result.unreadable() + " prix illisibles.");
+                        + " joueurs, " + result.menuDesigns() + " fonds de menu (gardés en base, plus utilisés), " + result.unreadable() + " prix illisibles.");
             }
         }
     }

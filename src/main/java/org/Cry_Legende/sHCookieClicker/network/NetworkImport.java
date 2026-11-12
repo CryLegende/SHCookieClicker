@@ -35,7 +35,7 @@ public final class NetworkImport {
         int imported = 0;
         int present = 0;
         try (Connection from = sqlite.connection(); Connection to = plugin.database().connection()) {
-            LegacyShopMigration.run(from, LegacyShopMigration.lookup(plugin.settings().backgroundIdsByPane()), plugin.getLogger());
+            LegacyShopMigration.run(from, plugin.getLogger());
             try (PreparedStatement select = from.prepareStatement("SELECT UUID, NAME, COOKIES, PER_CLICK, CLICKER_CLICKS, BLOCK_DESIGN, PARTICLE_DESIGN, MENU_DESIGN FROM " + Database.PLAYERS);
                  PreparedStatement insert = to.prepareStatement("INSERT IGNORE INTO " + Database.PLAYERS
                          + " (UUID, NAME, COOKIES, PER_CLICK, CLICKER_CLICKS, BLOCK_DESIGN, PARTICLE_DESIGN, MENU_DESIGN) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");

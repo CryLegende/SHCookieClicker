@@ -5,7 +5,8 @@ Le Cookie Clicker du spawn de SkyHand (Paper 26.3, Java 25).
 - **Clic gauche** sur un clicker : des cookies, autant que les cookies par clic du joueur.
 - **Clic droit** : le menu, avec la boutique d'améliorations (des cookies par clic en plus, prix qui monte à chaque
   achat ; shift-clic pour dix achats d'un coup), la boutique **VipElite** et les **designs** : bloc vu à la place du
-  clicker, effet de coup, fond des menus. Un design s'achète une fois, puis se sélectionne ou se retire.
+  clicker et effet de coup. Un design s'achète une fois, puis se sélectionne ou se retire. Les menus gardent la mise
+  en page de SkyHand (cadre noir) pour tout le monde.
 - Au hasard d'un clic : le **cookie doré** (les clics rapportent le double pendant une minute) ou l'**explosion de
   cookies** (vingt cookies à ramasser, vus du seul joueur, dix fois les cookies par clic chacun).
 - **Anti-autoclic** : au-delà de 12 clics par seconde, les clics ne rapportent plus rien jusqu'à ce que le joueur
@@ -52,7 +53,8 @@ nombre d'achats d'une amélioration (1 pour un design) et `SHOP_ID` vaut `DEFAUL
   les commandes et ce qui touche à d'autres mondes passent par le fil principal.
 - Boutique de CookieClicker 4.8 (table `cookieclicker_players_v4`, SQLite) : reprise une fois, repère `shop-v4`. La 4.8
   gardait le prix courant des 14 améliorations ; il montait de 115 × gain à chaque achat, d'où le nombre d'achats exact.
-  Le fond de menu choisi dans la 4.8 devient un fond acheté et sélectionné.
+  Le fond de menu choisi dans la 4.8 est noté comme dans la 5.9 (`MENU_DESIGN`) ; la 2.0 n'a plus de fonds de menu :
+  la colonne et ces lignes restent en base, sans servir.
 
 ## Mode réseau
 
@@ -73,8 +75,9 @@ La 2.0 est une réécriture complète. Au premier démarrage, elle passe les fic
 console : les réglages de `config.yml` (boutiques, prix, sons, événements, protections, MySQL, mode réseau) sont repris,
 `mysql.yml` rejoint `config.yml`, `messages.yml` et `menus.yml` sont remplacés. La base est lue telle quelle.
 
-Retirés car jamais utilisés sur Opale : les murs de statistiques et le chronomètre de réinitialisation (le classement
-passe par ajLeaderboards et `/cookietop`), l'événement `CookieClickerInteractEvent`.
+Retirés : les fonds de menu à acheter (les menus gardent tous le cadre de SkyHand ; personne n'en avait payé un, ceux de
+la 4.8 étaient gratuits) ; car jamais utilisés sur Opale, les murs de statistiques et le chronomètre de réinitialisation
+(le classement passe par ajLeaderboards et `/cookietop`), l'événement `CookieClickerInteractEvent`.
 
 ## Historique
 

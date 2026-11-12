@@ -19,7 +19,8 @@ import java.util.Objects;
  * Passage des fichiers de SHCookieClicker 1.x au format 2.0, une seule fois, au premier démarrage :
  * <ul>
  *   <li>config.yml : les réglages (boutiques, prix, sons, protections, événements, base MySQL, mode réseau) sont
- *       repris dans le nouveau fichier ; s'ils sont ceux de la 1.x, le fichier du jar est écrit tel quel ;</li>
+ *       repris dans le nouveau fichier (sauf les fonds de menu, retirés) ; s'ils sont ceux de la 1.x, le fichier du jar
+ *       est écrit tel quel ;</li>
  *   <li>mysql.yml : ses identifiants passent dans config.yml (s'ils servaient), puis le fichier est supprimé ;</li>
  *   <li>messages.yml et menus.yml : remplacés par ceux du jar (les textes et la mise en page ont changé).</li>
  * </ul>
@@ -131,7 +132,6 @@ public final class LegacyFiles {
         change.section("boutique.vipelite", upgrades(old.getConfigurationSection("premium_shop")));
         change.section("designs.blocs", blocks(old.getConfigurationSection("block_design_shop")));
         change.section("designs.effets", effects(old.getConfigurationSection("hit_particle_design_shop")));
-        change.section("designs.fonds", backgrounds(old.getConfigurationSection("menu_design_shop")));
 
         ConfigurationSection sounds = old.getConfigurationSection("sounds");
         if (sounds != null) {
@@ -231,20 +231,6 @@ public final class LegacyFiles {
                 result.put(p + "couleur", String.format("#%02X%02X%02X", section.getInt(p + "color.red") & 0xFF,
                         section.getInt(p + "color.green") & 0xFF, section.getInt(p + "color.blue") & 0xFF));
             }
-            result.put(p + "prix", section.getLong(p + "base_price"));
-        }
-        return result;
-    }
-
-    private static Map<String, Object> backgrounds(ConfigurationSection section) {
-        if (section == null) {
-            return null;
-        }
-        Map<String, Object> result = new LinkedHashMap<>();
-        for (String id : section.getKeys(false)) {
-            String p = id + ".";
-            result.put(p + "nom", section.getString(p + "display_name", "?"));
-            result.put(p + "vitre", section.getString(p + "block_type", "GLASS_PANE"));
             result.put(p + "prix", section.getLong(p + "base_price"));
         }
         return result;

@@ -6,7 +6,7 @@ import org.Cry_Legende.sHCookieClicker.data.ShopKind;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-/** Choix de la sorte de design : bloc du clicker, effet de coup, fond des menus. */
+/** Choix de la sorte de design : bloc du clicker ou effet de coup. */
 public final class DesignCategoryMenu extends Menu {
 
     public DesignCategoryMenu(SHCookieClicker plugin, Player player) {
@@ -17,7 +17,6 @@ public final class DesignCategoryMenu extends Menu {
     protected void draw() {
         category("designs.blocs", Material.PRISMARINE, ShopKind.BLOCK_DESIGN);
         category("designs.effets", Material.DRAGON_BREATH, ShopKind.HIT_PARTICLE_DESIGN);
-        category("designs.fonds", Material.PAINTING, ShopKind.MENU_DESIGN);
         back(new HomeMenu(plugin, player));
     }
 

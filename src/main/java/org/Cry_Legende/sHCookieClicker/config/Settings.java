@@ -10,7 +10,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -48,7 +47,6 @@ public final class Settings {
     private final Map<Integer, Upgrade> premium;
     private final Map<Integer, Designs.Block> blocks;
     private final Map<Integer, Designs.Effect> effects;
-    private final Map<Integer, Designs.Background> backgrounds;
 
     public final boolean networkEnabled;
     public final int networkWaitSeconds;
@@ -93,7 +91,6 @@ public final class Settings {
         premium = upgrades(section(file, jar, "boutique.vipelite"), "boutique.vipelite", warn);
         blocks = blocks(section(file, jar, "designs.blocs"), warn);
         effects = effects(section(file, jar, "designs.effets"), warn);
-        backgrounds = backgrounds(section(file, jar, "designs.fonds"), warn);
 
         networkEnabled = file.getBoolean("reseau.actif", true);
         networkWaitSeconds = Math.max(1, file.getInt("reseau.attente-max-secondes", 10));
@@ -201,19 +198,6 @@ public final class Settings {
         return Collections.unmodifiableMap(result);
     }
 
-    private static Map<Integer, Designs.Background> backgrounds(ConfigurationSection section, List<String> warn) {
-        Map<Integer, Designs.Background> result = new LinkedHashMap<>();
-        for (int id : ids(section, "designs.fonds", warn)) {
-            ConfigurationSection item = section.getConfigurationSection(String.valueOf(id));
-            if (item == null) {
-                continue;
-            }
-            result.put(id, new Designs.Background(id, item.getString("nom", "?"), Math.max(0, item.getLong("prix")),
-                    material(item.getString("vitre"), Material.GLASS_PANE, "designs.fonds." + id, warn)));
-        }
-        return Collections.unmodifiableMap(result);
-    }
-
     // Particules envoyées sans donnée, ou avec une donnée que l'effet sait fournir (couleur, puissance)
     private static Particle particle(String name, String path, List<String> warn) {
         try {
@@ -256,7 +240,6 @@ public final class Settings {
         return switch (kind) {
             case BLOCK_DESIGN -> blocks;
             case HIT_PARTICLE_DESIGN -> effects;
-            case MENU_DESIGN -> backgrounds;
             default -> Map.of();
         };
     }
@@ -267,16 +250,5 @@ public final class Settings {
 
     public Designs.Effect effect(long id) {
         return effects.get((int) id);
-    }
-
-    public Designs.Background background(long id) {
-        return backgrounds.get((int) id);
-    }
-
-    /** Numéro du fond de chaque vitre, pour la reprise des fonds de CookieClicker 4.8. */
-    public Map<String, Integer> backgroundIdsByPane() {
-        Map<String, Integer> result = new HashMap<>();
-        backgrounds.values().forEach(background -> result.putIfAbsent(background.pane().name(), background.id()));
-        return result;
     }
 }

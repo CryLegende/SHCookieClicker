@@ -2,11 +2,9 @@ package org.Cry_Legende.sHCookieClicker.menu;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import org.Cry_Legende.sHCookieClicker.SHCookieClicker;
-import org.Cry_Legende.sHCookieClicker.config.Designs;
 import org.Cry_Legende.sHCookieClicker.config.MenuLayout;
 import org.Cry_Legende.sHCookieClicker.config.SoundSet;
 import org.Cry_Legende.sHCookieClicker.data.Profile;
-import org.Cry_Legende.sHCookieClicker.data.ShopKind;
 import org.Cry_Legende.sHCookieClicker.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -64,7 +62,7 @@ public abstract class Menu implements InventoryHolder {
         });
     }
 
-    /** Redessine le menu ouvert (cookies, prix, sélection, fond). */
+    /** Redessine le menu ouvert (cookies, prix, sélection). */
     public void render() {
         actions.clear();
         inventory.clear();
@@ -76,20 +74,12 @@ public abstract class Menu implements InventoryHolder {
                 inventory.setItem(slot, accent);
             }
         }
-        ItemStack background = pane(backgroundPane());
+        ItemStack background = pane(layout.material("fond.materiau", Material.BLACK_STAINED_GLASS_PANE));
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             if (inventory.getItem(slot) == null) {
                 inventory.setItem(slot, background);
             }
         }
-    }
-
-    /** Vitre du fond : le design « fond » choisi par le joueur, sinon celle de menus.yml. */
-    private Material backgroundPane() {
-        Profile profile = plugin.profiles().get(player.getUniqueId());
-        long id = profile == null ? 0 : profile.selected(ShopKind.MENU_DESIGN);
-        Designs.Background background = id > 0 ? plugin.settings().background(id) : null;
-        return background != null ? background.pane() : plugin.menus().material("fond.materiau", Material.BLACK_STAINED_GLASS_PANE);
     }
 
     protected void set(int slot, ItemStack item, Consumer<ClickType> action) {

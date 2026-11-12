@@ -6,13 +6,13 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 
-/** Les trois sortes de designs : ils s'achètent une fois, puis se sélectionnent. */
+/** Les designs (bloc du clicker, effet de coup) : ils s'achètent une fois, puis se sélectionnent. */
 public final class Designs {
 
     private Designs() {
     }
 
-    public sealed interface Design permits Block, Effect, Background {
+    public sealed interface Design permits Block, Effect {
         int id();
 
         String name();
@@ -49,20 +49,6 @@ public final class Designs {
         @Override
         public ShopKind kind() {
             return ShopKind.HIT_PARTICLE_DESIGN;
-        }
-    }
-
-    /** Fond des menus : la vitre qui entoure les menus du clicker. */
-    public record Background(int id, String name, long price, Material pane) implements Design {
-        @Override
-        public ShopKind kind() {
-            return ShopKind.MENU_DESIGN;
-        }
-
-        /** Icône du menu : le bloc de verre de la vitre. */
-        public Material icon() {
-            Material glass = Material.matchMaterial(pane.name().replace("_PANE", ""));
-            return glass != null && glass.isItem() ? glass : pane;
         }
     }
 }

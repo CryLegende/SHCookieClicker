@@ -27,8 +27,7 @@ public final class DesignMenu extends Menu {
     public DesignMenu(SHCookieClicker plugin, Player player, ShopKind kind, int page) {
         super(plugin, player, switch (kind) {
             case BLOCK_DESIGN -> "designs-blocs";
-            case HIT_PARTICLE_DESIGN -> "designs-effets";
-            default -> "designs-fonds";
+            default -> "designs-effets";
         });
         this.kind = kind;
         this.page = page;
@@ -116,7 +115,6 @@ public final class DesignMenu extends Menu {
                 }
             }
             case Designs.Effect effect -> material = effect.icon();
-            case Designs.Background background -> material = background.icon();
         }
         return item(material, name, lore, selected, head);
     }
