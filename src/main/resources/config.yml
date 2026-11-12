@@ -43,7 +43,8 @@
 #                              Clic : un achat ; shift-clic : dix achats d'un coup (ou autant
 #                              que les cookies le permettent).
 #    designs                   s'achètent une fois, puis se sélectionnent (clic gauche) ou se
-#                              retirent (clic droit sur le design sélectionné).
+#                              retirent (clic droit sur le design sélectionné). Le menu les range
+#                              dans l'ordre de leur numéro.
 #      blocs    bloc ou tête qui flotte au-dessus du clicker, à la place de la tête de cookie
 #               (apparence). TETE_JOUEUR : la tête du joueur (skin de SHSkins) ;
 #               PLAYER_HEAD avec texture : une tête à texture.
@@ -216,30 +217,38 @@ boutique:
 
 designs:
   blocs:
-    1:
-      nom: Prismarine
-      bloc: PRISMARINE
-      prix: 100000
-    2:
-      nom: Or brut
-      bloc: RAW_GOLD_BLOCK
-      prix: 200000
     3:
-      nom: Bloc de miel
-      bloc: HONEY_BLOCK
-      prix: 300000
+      nom: Cristal d'améthyste
+      bloc: AMETHYST_CLUSTER
+      prix: 250000
     4:
       nom: Oeuf de dragon
       bloc: DRAGON_EGG
       prix: 400000
-    5:
-      nom: Cactus
-      bloc: CACTUS
-      prix: 500000
     7:
       nom: Votre tête
       bloc: TETE_JOUEUR
       prix: 700000
+    8:
+      nom: Coffre doré
+      bloc: PLAYER_HEAD
+      texture: http://textures.minecraft.net/texture/7406e45318e9a4a6bfe132f202fe3ceac15d11eaedbef1eb06a376db433090a8
+      prix: 5000000
+    9:
+      nom: Cœur de l'océan
+      bloc: PLAYER_HEAD
+      texture: http://textures.minecraft.net/texture/5113ee610841ded215acd2b4caaeef87dfd6e3d4768e7ab4e19eb76b3d8121cf
+      prix: 50000000
+    10:
+      nom: Coffre de diamants
+      bloc: PLAYER_HEAD
+      texture: http://textures.minecraft.net/texture/9714516e6565b812ff5b39ea39cd287afec8fcc06d8f30521ccd8f1b4cbfdc6b
+      prix: 500000000
+    11:
+      nom: Étoile du Nether
+      bloc: PLAYER_HEAD
+      texture: http://textures.minecraft.net/texture/57c66f5a4b408005b336da6676e8f6a2a67eea315fb7e91360acc047802fa320
+      prix: 5000000000
   effets:
     1:
       nom: Racines grandissantes

@@ -1,5 +1,6 @@
 package org.Cry_Legende.sHCookieClicker.config;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -9,7 +10,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,12 +33,29 @@ class LegacyFilesTest {
         }
     }
 
+    // Les valeurs d'un fichier, sans les sections (qui ne se comparent pas)
+    private static Map<String, Object> leaves(YamlConfiguration config) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        config.getValues(true).forEach((key, value) -> {
+            if (!(value instanceof ConfigurationSection)) {
+                values.put(key, value);
+            }
+        });
+        return values;
+    }
+
     @Test
     void defaultFilesOfTheOldVersionBecomeTheJarFiles(@TempDir Path folder) throws Exception {
         legacyFolder(folder);
         List<String> done = LegacyFiles.migrate(folder.toFile(), resource("/config.yml"), resource("/messages.yml"), resource("/menus.yml"));
         done.forEach(System.out::println);
-        assertEquals(resource("/config.yml"), Files.readString(folder.resolve("config.yml")), "réglages de la 1.3 = ceux du jar");
+        // Les réglages de la 1.3 sont ceux du jar, sauf les blocs à vendre : le catalogue du jar a changé depuis
+        YamlConfiguration converted = YamlConfiguration.loadConfiguration(folder.resolve("config.yml").toFile());
+        YamlConfiguration jar = new YamlConfiguration();
+        jar.loadFromString(resource("/config.yml"));
+        converted.set("designs.blocs", null);
+        jar.set("designs.blocs", null);
+        assertEquals(leaves(jar), leaves(converted), "réglages de la 1.3 = ceux du jar");
         assertEquals(resource("/messages.yml"), Files.readString(folder.resolve("messages.yml")));
         assertEquals(resource("/menus.yml"), Files.readString(folder.resolve("menus.yml")));
         assertFalse(Files.exists(folder.resolve("mysql.yml")));
