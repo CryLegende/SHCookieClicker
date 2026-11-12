@@ -4,10 +4,11 @@ main: org.Cry_Legende.sHCookieClicker.SHCookieClicker
 api-version: '26.3'
 author: Cry_Legende
 description: "Cookie Clicker de SkyHand : clicker du spawn, améliorations, designs, cookie doré, explosion de cookies et classement."
+depend:
+  - packetevents
 softdepend:
   - Multiverse-Core
   - PlaceholderAPI
-  - packetevents
   - SHNetwork
   - SHSkins
 

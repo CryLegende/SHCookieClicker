@@ -14,12 +14,15 @@ Le Cookie Clicker du spawn de SkyHand (Paper 26.3, Java 25).
 - Les réglages, les boutiques et les sons sont dans `config.yml` (son en-tête décrit tout), les textes dans
   `messages.yml`, les menus dans `menus.yml`, les clickers dans `locations.yml`.
 
-## L'objet du clicker
+## Le clicker : un objet qui flotte et sa zone de clic
 
-Au-dessus de chaque clicker flotte une **tête de cookie** (le design de tous les joueurs qui n'en ont pas choisi) ou le
-bloc ou la tête choisis dans la boutique des designs. C'est une entité d'affichage (item display pour une tête, block
-display pour un bloc) **envoyée en paquets** à chaque joueur : chacun voit la sienne, le serveur n'en garde aucune et
-rien n'est écrit dans le monde. Le bloc du clicker reste un bloc invisible (barrière) : c'est lui qui reçoit les clics.
+Un clicker n'a **aucun bloc**. `locations.yml` donne seulement sa case ; au-dessus de son centre (`apparence.hauteur`)
+flotte une **tête de cookie** (le design de tous les joueurs qui n'en ont pas choisi) ou le bloc ou la tête choisis
+dans la boutique des designs. C'est une entité d'affichage (item display pour une tête, block display pour un bloc), et
+autour d'elle une **zone de clic** invisible, plus large que l'objet (1,6 x 1,6 blocs par défaut) : une entité
+interaction. Les deux sont **envoyées en paquets** à chaque joueur, qui voit les siennes : le serveur n'en garde aucune
+et rien n'est écrit dans le monde. Les clics sur la zone sont lus dans les paquets (clic gauche : un cookie ; clic
+droit : le menu) et joués au tick suivant sur le fil principal.
 
 - Au repos, l'objet tourne sur lui-même (un tour en 8 secondes) en montant et en descendant doucement. Un paquet de
   quelques dizaines d'octets toutes les 5 ticks et par joueur : le client lisse le mouvement entre deux envois.
@@ -28,8 +31,9 @@ rien n'est écrit dans le monde. Le bloc du clicker reste un bloc invisible (bar
 - Un joueur le voit à moins de `apparence.rayon` blocs (jamais plus loin que sa distance de vue), le perd un peu plus
   loin (pas de clignotement), et le retrouve en revenant. Il est remonté après un changement de monde, une
   réapparition, un rechargement (`/shcookieclicker reload`) ; au déchargement du plugin il disparaît chez tout le monde.
-- Il demande le plugin **packetevents** (facultatif : sans lui, le clicker marche mais n'a pas d'objet, et la console le
-  signale). `apparence.actif: false` le retire. Réglages : `apparence` dans `config.yml`.
+- Il demande le plugin **packetevents**, sans lequel le plugin ne démarre pas. Réglages : `apparence` dans `config.yml`.
+- `/shcookieclicker set clicker <n>` prend toujours le bloc cliqué comme repère : le clicker est sa case, l'objet
+  flotte à `hauteur` au-dessus de son centre ; le bloc lui-même peut être de l'air.
 
 ## Commandes et permissions
 
@@ -115,4 +119,4 @@ SHSkins et SHNetwork doivent être dans le dépôt Maven local (`mvn install` da
 Le test `ServerDatabaseTest` rejoue la reprise et une écriture complète sur la copie d'une vraie base :
 `mvn test -Dcookieclicker.db=chemin/vers/cookieclicker.db` (jamais versionnée).
 
-packetevents (2.14) vient du dépôt CodeMC. Le jar est `target/SHCookieClicker-2.1.jar`.
+packetevents (2.14) vient du dépôt CodeMC. Le jar est `target/SHCookieClicker-2.2.jar`.

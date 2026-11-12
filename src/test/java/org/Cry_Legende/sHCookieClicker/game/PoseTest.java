@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Géométrie de l'objet du clicker : repos, bond, centrage d'un bloc affiché. */
 class PoseTest {
-    private static final Appearance LOOK = new Appearance(true, "texture", 40, 0.5, 1.0f, 0.75f, 160, 0.08, 60, 5, 0.2, 0.12);
+    private static final Appearance LOOK = new Appearance("texture", 40, 0.5, 1.0f, 0.75f, 1.6f, 1.6f, 160, 0.08, 60, 5, 0.2, 0.12);
 
     /** Tourne (x, y, z) par le quaternion (0, qy, 0, qw), comme le client le fait. */
     private static double[] rotate(Pose.Frame frame, double x, double y, double z) {

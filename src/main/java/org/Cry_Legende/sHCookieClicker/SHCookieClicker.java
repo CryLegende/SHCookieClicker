@@ -87,11 +87,7 @@ public final class SHCookieClicker extends JavaPlugin {
         rankingTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, ranking::refresh, settings.rankingSeconds * 20L, settings.rankingSeconds * 20L);
 
         feedback = new Feedback(this);
-        boolean packets = Bukkit.getPluginManager().isPluginEnabled("packetevents");
-        if (!packets && settings.appearance.enabled()) {
-            getLogger().warning("packetevents absent : le clicker n'a pas d'objet qui flotte au-dessus de lui.");
-        }
-        display = new ClickerDisplay(this, packets);
+        display = new ClickerDisplay(this);
         particles = new ParticleAnimator();
         explosions = new Explosions(this);
         holograms = new Holograms(this);

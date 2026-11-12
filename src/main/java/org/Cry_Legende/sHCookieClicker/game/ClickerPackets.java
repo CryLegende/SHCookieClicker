@@ -26,8 +26,8 @@ import java.util.UUID;
 
 /**
  * Paquets de l'objet du clicker : une entité d'affichage (item display pour une tête, block display pour un bloc)
- * qui n'existe que chez le joueur qui la reçoit, le serveur n'en garde aucune. Seule classe qui touche à
- * packetevents ; elle n'est chargée que si le plugin est là.
+ * et sa zone de clic (une entité interaction, invisible), qui n'existent que chez le joueur qui les reçoit : le
+ * serveur n'en garde aucune. Avec ClickerInput, les seules classes qui touchent à packetevents.
  */
 final class ClickerPackets {
 
@@ -37,6 +37,10 @@ final class ClickerPackets {
     private static final int TRANSLATION = 11;
     private static final int SCALE = 12;
     private static final int LEFT_ROTATION = 13;
+    // Interaction (depuis 1.19.4) : largeur, hauteur, réponse au clic
+    private static final int WIDTH = 8;
+    private static final int HEIGHT = 9;
+    private static final int RESPONSIVE = 10;
     private static final int ITEM = 23;
     private static final int ITEM_CONTEXT = 24;
     private static final int BLOCK_STATE = 23;
@@ -79,8 +83,18 @@ final class ClickerPackets {
         send(viewer, new WrapperPlayServerEntityMetadata(entityId, data));
     }
 
-    static void destroy(Player viewer, int entityId) {
-        send(viewer, new WrapperPlayServerDestroyEntities(entityId));
+    /** Zone de clic : une entité interaction invisible, posée sur le sol de la zone (x, y, z : centre du pied). */
+    static void spawnHitbox(Player viewer, int entityId, double x, double y, double z, float width, float height) {
+        send(viewer, new WrapperPlayServerSpawnEntity(entityId, Optional.of(UUID.randomUUID()), EntityTypes.INTERACTION,
+                new Vector3d(x, y, z), 0.0f, 0.0f, 0.0f, 0, Optional.empty()));
+        send(viewer, new WrapperPlayServerEntityMetadata(entityId, List.of(
+                new EntityData<>(WIDTH, EntityDataTypes.FLOAT, width),
+                new EntityData<>(HEIGHT, EntityDataTypes.FLOAT, height),
+                new EntityData<>(RESPONSIVE, EntityDataTypes.BOOLEAN, true))));
+    }
+
+    static void destroy(Player viewer, int... entityIds) {
+        send(viewer, new WrapperPlayServerDestroyEntities(entityIds));
     }
 
     private static void pose(List<EntityData<?>> data, Pose.Frame frame) {

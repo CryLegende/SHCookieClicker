@@ -6,7 +6,7 @@
 
     <groupId>org.Cry_Legende</groupId>
     <artifactId>SHCookieClicker</artifactId>
-    <version>2.1</version>
+    <version>2.2</version>
     <packaging>jar</packaging>
 
     <name>SHCookieClicker</name>
@@ -122,7 +122,7 @@
             <version>2.0.16</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Facultatif à l'exécution (softdepend) : sans lui, le clicker n'a pas d'objet qui flotte au-dessus de lui -->
+        <!-- Installé sur le serveur (plugin) : le clicker et sa zone de clic sont des paquets -->
         <dependency>
             <groupId>com.github.retrooper</groupId>
             <artifactId>packetevents-spigot</artifactId>

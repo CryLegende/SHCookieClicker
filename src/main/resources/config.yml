@@ -104,12 +104,12 @@ hologrammes:
   # Gain qui s'élève au-dessus d'un cookie ramassé pendant une explosion.
   gains: true
 
-# L'objet qui flotte au-dessus de chaque clicker : une tête de cookie, ou le bloc ou la tête choisis dans les
-# designs. Il est envoyé en paquets à chaque joueur, qui voit le sien (le serveur n'en garde aucune entité) ;
-# il demande le plugin packetevents. Il tourne sur lui-même en montant et en descendant doucement, et fait un
-# bond à chaque clic qui compte, vu du seul joueur qui clique.
+# Le clicker : un objet qui flotte (une tête de cookie, ou le bloc ou la tête choisis dans les designs) et la zone
+# invisible où il faut cliquer, plus large que lui. Un clicker n'a aucun bloc : « locations.yml » donne seulement
+# sa case, l'objet flotte à « hauteur » au-dessus de son centre. Tout est envoyé en paquets à chaque joueur, qui voit
+# le sien (le serveur n'en garde aucune entité) ; il demande le plugin packetevents. L'objet tourne sur lui-même en
+# montant et en descendant doucement, et fait un bond à chaque clic qui compte, vu du seul joueur qui clique.
 apparence:
-  actif: true
   # Tête affichée quand le joueur n'a choisi aucun design : adresse textures.minecraft.net ou identifiant de texture.
   tete-par-defaut: http://textures.minecraft.net/texture/605ef8819fb6a92148249ff48c3914e92c273e7874523ff7930b9f5cc93ceaae
   # Distance d'affichage, en blocs (jamais plus que la distance de vue du joueur).
@@ -119,6 +119,10 @@ apparence:
   # Tailles : 1 pour une tête, c'est la taille d'une tête de mannequin ; en blocs pour un bloc.
   taille-tete: 1.0
   taille-bloc: 0.75
+  # Zone de clic, centrée sur l'objet : largeur et hauteur, en blocs.
+  zone-de-clic:
+    largeur: 1.6
+    hauteur: 1.6
   repos:
     # Durée d'un tour sur lui-même, en secondes.
     tour-secondes: 8

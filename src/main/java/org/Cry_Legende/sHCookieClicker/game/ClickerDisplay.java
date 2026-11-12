@@ -1,5 +1,6 @@
 package org.Cry_Legende.sHCookieClicker.game;
 
+import com.github.retrooper.packetevents.event.PacketListenerCommon;
 import org.Cry_Legende.sHCookieClicker.SHCookieClicker;
 import org.Cry_Legende.sHCookieClicker.config.Appearance;
 import org.Cry_Legende.sHCookieClicker.config.Designs;
@@ -9,26 +10,30 @@ import org.Cry_Legende.sHCookieClicker.hook.Heads;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 /**
- * L'objet qui flotte au-dessus de chaque clicker : une tête de cookie, ou le design choisi par le joueur. Il est
- * envoyé en paquets à chaque joueur, qui voit le sien : le serveur ne garde aucune entité et n'écrit rien dans le
- * monde. Il tourne sur lui-même en montant et en descendant doucement, et fait un bond à chaque clic qui compte
- * (vu du seul joueur qui clique).
+ * Le clicker : un objet qui flotte (une tête de cookie, ou le design choisi par le joueur) et la zone invisible où
+ * il faut cliquer, plus large que lui. Tout est envoyé en paquets à chaque joueur, qui voit le sien : le serveur ne
+ * garde aucune entité, n'écrit rien dans le monde et le clicker n'a aucun bloc. L'objet tourne sur lui-même en
+ * montant et en descendant doucement, et fait un bond à chaque clic qui compte (vu du seul joueur qui clique).
  * <p>
- * Un seul minuteur, sur le fil principal : tous les 10 ticks il montre l'objet aux joueurs qui s'approchent d'un
- * clicker et le retire à ceux qui s'éloignent ; à chaque tick il envoie, à ceux qui le voient, la prochaine pose
- * quand leur objet n'a plus de mouvement en cours. Le client lisse le mouvement entre deux envois : au repos, un
- * paquet de quelques dizaines d'octets tous les 5 ticks et par joueur.
+ * Un seul minuteur, sur le fil principal : à chaque tick il joue les clics reçus (remis par ClickerInput, sur le fil
+ * réseau), tous les 10 ticks il montre l'objet aux joueurs qui s'approchent d'un clicker et le retire à ceux qui
+ * s'éloignent, et il envoie à ceux qui le voient la prochaine pose quand leur objet n'a plus de mouvement en cours.
+ * Le client lisse le mouvement entre deux envois : au repos, un paquet de quelques dizaines d'octets tous les
+ * 5 ticks et par joueur.
  */
 public final class ClickerDisplay {
     private static final int SWEEP_TICKS = 10;
@@ -38,47 +43,65 @@ public final class ClickerDisplay {
     private static final int POP_DOWN_TICKS = 3;
     /** Écart minimal entre deux bonds, en ticks : au plus un bond tous les 3 ticks, même à douze clics par seconde. */
     private static final int POP_GAP_TICKS = 3;
+    /** Un clic droit envoie deux paquets (interaction puis interaction à un point) : le second est ignoré. */
+    private static final long RIGHT_CLICK_GAP_MILLIS = 250;
+    /** Clics en attente par joueur : un client qui en envoie bien plus que le jeu n'en permet est ignoré. */
+    private static final int MAX_QUEUED_CLICKS = 40;
 
     private final SHCookieClicker plugin;
-    private final boolean available;
     private final Map<UUID, View> views = new ConcurrentHashMap<>();
+    private final Queue<Click> clicks = new ConcurrentLinkedQueue<>();
+    private PacketListenerCommon input;
     private BukkitTask task;
 
     /** Les objets montés à un joueur, par clicker. */
     private static final class View {
         final Player player;
         final Map<Clickers.Spot, Shown> shown = new ConcurrentHashMap<>();
+        final AtomicInteger queued = new AtomicInteger();
+        volatile long rightAt;
 
         View(Player player) {
             this.player = player;
         }
     }
 
-    /** Un objet monté à un joueur. */
+    /** Un objet et sa zone de clic, montés à un joueur. */
     private static final class Shown {
         final int entityId;
+        final int hitboxId;
         final Look look;
         /** Tick du prochain envoi de pose. */
         int nextFrame;
         /** 1 entre le sommet du bond et le retour au repos. */
         int phase;
-        /** Tick du dernier bond demandé (fil du monde du joueur) et du dernier bond joué (fil principal). */
+        /** Tick du dernier bond demandé (fil principal) et du dernier bond joué. */
         volatile int popRequested = Integer.MIN_VALUE;
         int popPlayed = Integer.MIN_VALUE;
 
-        Shown(int entityId, Look look) {
+        Shown(int entityId, int hitboxId, Look look) {
             this.entityId = entityId;
+            this.hitboxId = hitboxId;
             this.look = look;
+        }
+
+        /** Premier envoi de pose dès le prochain passage du minuteur. */
+        Shown starting(int now) {
+            nextFrame = now;
+            return this;
         }
     }
 
-    public ClickerDisplay(SHCookieClicker plugin, boolean available) {
+    private record Click(View view, Clickers.Spot spot, boolean left) {
+    }
+
+    public ClickerDisplay(SHCookieClicker plugin) {
         this.plugin = plugin;
-        this.available = available;
     }
 
     public void start() {
-        if (available && task == null) {
+        if (task == null) {
+            input = ClickerInput.register(this);
             task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         }
     }
@@ -89,26 +112,31 @@ public final class ClickerDisplay {
             task.cancel();
             task = null;
         }
+        if (input != null) {
+            ClickerInput.unregister(input);
+            input = null;
+        }
         clearAll();
+        clicks.clear();
     }
 
     /** Rechargement de la configuration : tout est remonté avec les nouveaux réglages. */
     public void reload() {
-        if (!available) {
-            return;
-        }
         clearAll();
-        start();
         tick();
     }
 
     private void clearAll() {
         for (View view : views.values()) {
-            for (Map.Entry<Clickers.Spot, Shown> entry : view.shown.entrySet()) {
-                ClickerPackets.destroy(view.player, entry.getValue().entityId);
+            for (Shown shown : view.shown.values()) {
+                destroy(view.player, shown);
             }
         }
         views.clear();
+    }
+
+    private static void destroy(Player player, Shown shown) {
+        ClickerPackets.destroy(player, shown.entityId, shown.hitboxId);
     }
 
     /** Le joueur change de monde, meurt ou part : son client a déjà oublié les entités. */
@@ -118,25 +146,74 @@ public final class ClickerDisplay {
 
     /** Le joueur vient de changer de design : l'objet est remplacé sans attendre le prochain passage. */
     public void refresh(Player player) {
-        if (available) {
-            plugin.sync(() -> update(player, Bukkit.getCurrentTick()));
-        }
+        plugin.sync(() -> update(player, Bukkit.getCurrentTick()));
     }
 
     /** Un clic qui compte sur ce clicker : l'objet du joueur fait un bond. */
-    public void pop(Player player, Block block) {
+    public void pop(Player player, Clickers.Spot spot) {
         View view = views.get(player.getUniqueId());
-        if (view == null) {
+        Shown shown = view == null ? null : view.shown.get(spot);
+        if (shown != null) {
+            int now = Bukkit.getCurrentTick();
+            if ((long) now - shown.popRequested >= POP_GAP_TICKS) {
+                shown.popRequested = now;
+            }
+        }
+    }
+
+    // ---- clics (fil réseau)
+
+    /** Vrai si cette entité est la zone de clic d'un clicker de ce joueur. */
+    boolean owns(UUID uuid, int entityId) {
+        View view = views.get(uuid);
+        return view != null && spotOf(view, entityId) != null;
+    }
+
+    private static Clickers.Spot spotOf(View view, int hitboxId) {
+        for (Map.Entry<Clickers.Spot, Shown> entry : view.shown.entrySet()) {
+            if (entry.getValue().hitboxId == hitboxId) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    /** Un clic sur la zone de clic : joué au prochain tick, sur le fil principal. */
+    void click(UUID uuid, int hitboxId, boolean left) {
+        View view = views.get(uuid);
+        Clickers.Spot spot = view == null ? null : spotOf(view, hitboxId);
+        if (spot == null) {
             return;
         }
-        int now = Bukkit.getCurrentTick();
-        long key = block.getBlockKey();
-        String world = block.getWorld().getName();
-        for (Map.Entry<Clickers.Spot, Shown> entry : view.shown.entrySet()) {
-            Clickers.Spot spot = entry.getKey();
-            Shown shown = entry.getValue();
-            if (spot.key() == key && spot.world().equals(world) && (long) now - shown.popRequested >= POP_GAP_TICKS) {
-                shown.popRequested = now;
+        if (!left) {
+            long now = System.currentTimeMillis();
+            if (now - view.rightAt < RIGHT_CLICK_GAP_MILLIS) {
+                return;
+            }
+            view.rightAt = now;
+        }
+        if (view.queued.incrementAndGet() > MAX_QUEUED_CLICKS) {
+            view.queued.decrementAndGet();
+            return;
+        }
+        clicks.add(new Click(view, spot, left));
+    }
+
+    private void playClicks() {
+        for (Click click; (click = clicks.poll()) != null; ) {
+            click.view.queued.decrementAndGet();
+            Player player = click.view.player;
+            if (!player.isOnline() || views.get(player.getUniqueId()) != click.view) {
+                continue;
+            }
+            try {
+                if (click.left) {
+                    plugin.clicks().leftClick(player, click.spot);
+                } else {
+                    plugin.clicks().rightClick(player);
+                }
+            } catch (RuntimeException exception) {
+                plugin.getLogger().log(Level.SEVERE, "Clic de " + player.getName() + " impossible", exception);
             }
         }
     }
@@ -146,12 +223,7 @@ public final class ClickerDisplay {
     private void tick() {
         Appearance look = plugin.settings().appearance;
         int now = Bukkit.getCurrentTick();
-        if (!look.enabled()) {
-            if (!views.isEmpty()) {
-                clearAll();
-            }
-            return;
-        }
+        playClicks();
         if (now % SWEEP_TICKS == 0) {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 update(player, now);
@@ -170,10 +242,10 @@ public final class ClickerDisplay {
         Session session = plugin.sessions().get(player);
         Clickers clickers = plugin.clickers();
         View view = views.get(player.getUniqueId());
-        if (!look.enabled() || session == null || !session.isLoaded() || !clickers.hasClickers(player.getWorld())) {
+        if (session == null || !session.isLoaded() || !clickers.hasClickers(player.getWorld())) {
             if (view != null) {
                 for (Shown shown : view.shown.values()) {
-                    ClickerPackets.destroy(player, shown.entityId);
+                    destroy(player, shown);
                 }
                 views.remove(player.getUniqueId());
             }
@@ -187,7 +259,7 @@ public final class ClickerDisplay {
         List<Clickers.Spot> spots = clickers.all();
         for (Map.Entry<Clickers.Spot, Shown> entry : new ArrayList<>(view.shown.entrySet())) {
             if (!spots.contains(entry.getKey())) {
-                ClickerPackets.destroy(player, entry.getValue().entityId);
+                destroy(player, entry.getValue());
                 view.shown.remove(entry.getKey());
             }
         }
@@ -207,25 +279,29 @@ public final class ClickerDisplay {
             Shown shown = view.shown.get(spot);
             if (shown != null) {
                 if (distance > (double) (radius + HIDE_MARGIN) * (radius + HIDE_MARGIN)) {
-                    ClickerPackets.destroy(player, shown.entityId);
+                    destroy(player, shown);
                     view.shown.remove(spot);
                 } else if (!shown.look.key().equals(wanted.key())) {
+                    // Même zone de clic, un autre objet
                     ClickerPackets.destroy(player, shown.entityId);
-                    view.shown.put(spot, spawn(player, spot, wanted, look, now));
+                    view.shown.put(spot, new Shown(spawnObject(player, spot, wanted, look, now), shown.hitboxId, wanted).starting(now));
                 }
             } else if (distance <= (double) radius * radius) {
-                view.shown.put(spot, spawn(player, spot, wanted, look, now));
+                int hitbox = ClickerPackets.newEntityId();
+                double centerY = spot.y() + 0.5 + look.height();
+                ClickerPackets.spawnHitbox(player, hitbox, spot.x() + 0.5, centerY - look.hitHeight() / 2.0, spot.z() + 0.5,
+                        look.hitWidth(), look.hitHeight());
+                view.shown.put(spot, new Shown(spawnObject(player, spot, wanted, look, now), hitbox, wanted).starting(now));
             }
         }
     }
 
-    private Shown spawn(Player player, Clickers.Spot spot, Look wanted, Appearance look, int now) {
+    /** Montre l'objet au joueur, à la pose du moment ; rend son numéro d'entité. */
+    private int spawnObject(Player player, Clickers.Spot spot, Look wanted, Appearance look, int now) {
         int id = ClickerPackets.newEntityId();
         ClickerPackets.spawn(player, id, spot.x() + 0.5, spot.y() + 0.5 + look.height(), spot.z() + 0.5, wanted,
                 Pose.at(look, wanted.isBlock(), now, 0));
-        Shown shown = new Shown(id, wanted);
-        shown.nextFrame = now;
-        return shown;
+        return id;
     }
 
     /** Envoie la prochaine pose : le bond demandé d'abord, puis son retour au repos, sinon le repos. */

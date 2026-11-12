@@ -12,6 +12,7 @@ import org.Cry_Legende.sHCookieClicker.menu.HomeMenu;
 import org.Cry_Legende.sHCookieClicker.network.NetworkMode;
 import org.Cry_Legende.sHCookieClicker.util.Text;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
@@ -98,8 +99,8 @@ public final class ClickService {
 
     // ---- clics
 
-    /** Clic gauche sur un clicker, sur le fil du monde du clicker. */
-    public void leftClick(Player player, Block block) {
+    /** Clic gauche sur la zone de clic d'un clicker, sur le fil principal. */
+    public void leftClick(Player player, Clickers.Spot spot) {
         Session session = plugin.sessions().get(player);
         if (session == null || !session.loaded) {
             return;
@@ -116,12 +117,13 @@ public final class ClickService {
             return;
         }
         Profile profile = plugin.profiles().getOrCreate(player.getUniqueId(), player.getName());
-        playEffect(player, session, profile, block, now);
+        Location cell = new Location(player.getWorld(), spot.x(), spot.y(), spot.z());
+        playEffect(player, session, profile, cell, now);
         boolean golden = session.golden(now);
         profile.click(golden ? settings.goldenMultiplier : 1);
         plugin.ranking().markChanged();
         settings.sounds.play(player, SoundSet.Action.CLIC);
-        plugin.display().pop(player, block);
+        plugin.display().pop(player, spot);
         if (golden) {
             return;
         }
@@ -133,7 +135,7 @@ public final class ClickService {
         if (session.explosion == null && random.nextInt(settings.explosionChance) == 0) {
             title(player, "explosion.titre", "explosion.sous-titre");
             settings.sounds.play(player, SoundSet.Action.EXPLOSION);
-            plugin.explosions().start(player, session, block);
+            plugin.explosions().start(player, session, cell);
         }
         plugin.feedback().clicked(player, session, profile);
     }
@@ -147,7 +149,7 @@ public final class ClickService {
         plugin.feedback().startGolden(session);
     }
 
-    private void playEffect(Player player, Session session, Profile profile, Block block, long now) {
+    private void playEffect(Player player, Session session, Profile profile, Location cell, long now) {
         long id = profile.selected(ShopKind.HIT_PARTICLE_DESIGN);
         if (id <= 0 || now < session.effectReadyAt) {
             return;
@@ -157,7 +159,7 @@ public final class ClickService {
             return;
         }
         session.effectReadyAt = now + design.animation().durationMillis();
-        plugin.particles().play(player, block.getLocation(), design);
+        plugin.particles().play(player, cell, design);
     }
 
     private void title(Player player, String titleKey, String subtitleKey) {
@@ -165,7 +167,7 @@ public final class ClickService {
         player.showTitle(Title.title(Text.of(messages.raw(titleKey)), Text.of(messages.raw(subtitleKey)), TITLE_TIMES));
     }
 
-    /** Clic droit sur un clicker : le menu. */
+    /** Clic droit sur la zone de clic d'un clicker : le menu. */
     public void rightClick(Player player) {
         Session session = plugin.sessions().get(player);
         if (session == null || !session.loaded) {

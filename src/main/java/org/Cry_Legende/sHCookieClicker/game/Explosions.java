@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
@@ -55,10 +54,10 @@ public final class Explosions {
     }
 
     /** Fil du monde du clicker : les cookies y sont créés. */
-    void start(Player player, Session session, Block clicker) {
+    void start(Player player, Session session, Location clicker) {
         Settings settings = plugin.settings();
         Explosion explosion = new Explosion(player.getUniqueId());
-        Location origin = clicker.getLocation().add(0.5, 1, 0.5);
+        Location origin = clicker.clone().add(0.5, 1, 0.5);
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int index = 0; index < settings.explosionCookies; index++) {
             ItemStack stack = new ItemStack(Material.COOKIE);
