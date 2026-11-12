@@ -374,7 +374,7 @@ sounds:
     volume: 1.0
     pitch: 1.0
   open_inventory:
-    type: 'block.chest.open'
+    type: 'ui.toast.in'
     volume: 1.0
     pitch: 1.0
   shop:
