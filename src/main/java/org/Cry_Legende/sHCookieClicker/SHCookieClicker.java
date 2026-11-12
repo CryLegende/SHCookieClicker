@@ -233,17 +233,29 @@ public final class SHCookieClicker extends JavaPlugin {
         }
         try {
             long start = System.nanoTime();
-            database.createSchema();
+            try {
+                database.createSchema();
+            } catch (SQLException exception) {
+                // Base du réseau dont l'utilisateur n'a que les droits de lecture et d'écriture : tables créées à la main (sql/schema.sql)
+                getLogger().warning("Tables non créées (" + exception.getMessage() + ") : elles doivent déjà exister.");
+            }
             if (database.isSqlite()) {
                 migrateLegacyShop(database);
             }
-            boolean firstBoot = !database.hasMarker(FIRST_BOOT_MARKER);
+            boolean firstBoot;
+            try {
+                firstBoot = !database.hasMarker(FIRST_BOOT_MARKER);
+                if (firstBoot) {
+                    database.addMarker(FIRST_BOOT_MARKER);
+                }
+            } catch (SQLException exception) {
+                firstBoot = false;
+            }
             Database.LoadResult result = database.loadAll(profiles);
             long millis = (System.nanoTime() - start) / 1_000_000;
             String summary = Numbers.group(result.players(), " ") + " joueurs, " + Numbers.group(result.purchaseRows(), " ")
                     + " achats (" + Numbers.group(result.playersWithPurchases(), " ") + " joueurs)";
             if (firstBoot) {
-                database.addMarker(FIRST_BOOT_MARKER);
                 getLogger().info("Passage à la 2.0 : base " + (network != null ? "du réseau" : database.isSqlite() ? "cookieclicker.db" : "MySQL")
                         + " reprise telle quelle (mêmes tables, mêmes colonnes) : " + summary + ", cookies "
                         + Numbers.group(totalCookies(), " ") + ", lignes illisibles " + result.skipped() + ".");

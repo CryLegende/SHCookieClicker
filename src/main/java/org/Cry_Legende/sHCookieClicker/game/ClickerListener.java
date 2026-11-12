@@ -133,7 +133,8 @@ public final class ClickerListener implements Listener {
         plugin.clicks().join(event.getPlayer());
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    // Avant SHNetwork (MONITOR), qui lance alors les sauvegardes de départ et attend la nôtre
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onQuit(PlayerQuitEvent event) {
         lastLeftTick.remove(event.getPlayer().getUniqueId());
         plugin.clicks().leave(event.getPlayer(), true);

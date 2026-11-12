@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS bo_net.cookieclicker_shops (
     PRIMARY KEY (UUID, SHOP_ID, ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS bo_net.cookieclicker_migrations (
+    NAME            VARCHAR(64) NOT NULL PRIMARY KEY  -- repères des reprises faites une seule fois
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE USER IF NOT EXISTS 'shcookieclicker'@'127.0.0.1' IDENTIFIED BY 'CHANGE_ME';
 GRANT SELECT, INSERT, UPDATE, DELETE ON bo_net.cookieclicker_players TO 'shcookieclicker'@'127.0.0.1';
 GRANT SELECT, INSERT, UPDATE, DELETE ON bo_net.cookieclicker_shops TO 'shcookieclicker'@'127.0.0.1';
+GRANT SELECT, INSERT ON bo_net.cookieclicker_migrations TO 'shcookieclicker'@'127.0.0.1';
