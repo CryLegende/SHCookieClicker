@@ -1,458 +1,392 @@
-# ======================================================================== #
-# SHCookieClicker
+# ============================================================================
+#  SHCookieClicker : le Cookie Clicker du spawn
+# ============================================================================
 #
-# Plugin : CookieClicker de ZilloLP (licence CookieClicker 1.0, voir LICENSE), version SkyHand pour Paper 26.3.
-# Les joueurs cliquent sur un bloc « clicker » pour gagner des cookies, achètent des améliorations et des designs
-# dans la boutique et se comparent sur des murs de statistiques.
+#  Clic gauche sur un clicker : des cookies (autant que les cookies par clic
+#  du joueur). Clic droit : le menu, avec la boutique d'améliorations (des
+#  cookies par clic en plus, prix qui monte à chaque achat), la boutique
+#  VipElite et les designs (bloc du clicker, effet de coup, fond des menus).
+#  Au hasard d'un clic : le cookie doré (clics multipliés un moment) ou
+#  l'explosion de cookies (des cookies à ramasser, visibles du seul joueur).
+#  Un clic au-delà du nombre de clics par seconde permis, ou d'un joueur qui
+#  n'a pas bougé depuis un moment, ne rapporte rien.
 #
-# Fichiers : config.yml (réglages, boutiques, sons), messages.yml (textes), menus.yml (menus), locations.yml
-# (clickers, murs de statistiques, chronomètre), mysql.yml (base MySQL). Une clé absente d'un fichier prend la
-# valeur du jar.
+#  Commandes :
+#    /cookies [joueur]                     Statistiques (alias : /cookie).
+#    /shcookieclicker reload               Relit config.yml, messages.yml, menus.yml et locations.yml.
+#                                          Un fichier illisible ne change rien. base-de-donnees et
+#                                          reseau demandent un redémarrage.
+#    /shcookieclicker list                 Liste les clickers (clic : téléportation).
+#    /shcookieclicker set clicker <n>      Puis clic droit sur un bloc : il devient le clicker n.
+#    /shcookieclicker remove clicker <n>   Retire le clicker n.
+#    /shcookieclicker modify <joueur> <add|set|remove> <COOKIES|PER_CLICK|CLICKER_CLICKS> <n>
+#    /shcookieclicker reset <joueur>       Remet à zéro la progression d'un joueur.
+#    /shcookieclicker import               Mode réseau : copie la progression du fichier SQLite
+#                                          dans la base du réseau, sans rien écraser.
+#    L'ancien nom /cookieclicker reste accepté (alias de /shcookieclicker).
 #
-# Commande (alias : /cookieclicker) :
-#   /shcookieclicker stats [joueur]                                  Statistiques d'un joueur (tout le monde).
-#   /shcookieclicker list                                            Liste les clickers.
-#   /shcookieclicker set clicker <n>                                 Fait d'un bloc (clic droit) le clicker <n>.
-#   /shcookieclicker set resettimer                                  Place le chronomètre de réinitialisation à la position du joueur.
-#   /shcookieclicker set statswall <alltime|time> <n>                Crée un mur de statistiques (clic droit sur une tête).
-#   /shcookieclicker remove clicker <n>                              Retire le clicker <n>.
-#   /shcookieclicker remove resettimer                               Retire le chronomètre de réinitialisation.
-#   /shcookieclicker modify <joueur> <add|set|remove> <type> <n>     Modifie COOKIES, PER_CLICK ou CLICKER_CLICKS d'un joueur.
-#   /shcookieclicker reset <joueur>                                  Réinitialise la progression d'un joueur.
-#   /shcookieclicker import                                          Mode réseau : copie la progression SQLite dans la base du réseau.
-#   /shcookieclicker reload                                          Relit config.yml, messages.yml, menus.yml, locations.yml et mysql.yml.
-#                                                                    Un fichier illisible ne change rien. MySQL, mysql.yml et reseau demandent
-#                                                                    un redémarrage.
-#   Casser la tête ou la pancarte d'un mur de statistiques le supprime (droit shcookieclicker.admin.remove).
+#  Permissions :
+#    shcookieclicker.use             /cookies (tout le monde)
+#    shcookieclicker.premium         Boutique VipElite (op)
+#    shcookieclicker.admin           Toutes les sous-commandes de /shcookieclicker (op)
+#    shcookieclicker.admin.<sous-commande>  reload, list, set, remove, modify, reset, import (op)
 #
-# Permissions (par défaut : op) :
-#   shcookieclicker.admin          Toutes les sous-commandes d'administration.
-#   shcookieclicker.admin.reload   /shcookieclicker reload
-#   shcookieclicker.admin.list     /shcookieclicker list
-#   shcookieclicker.admin.set      /shcookieclicker set
-#   shcookieclicker.admin.remove   /shcookieclicker remove, et casser un mur de statistiques
-#   shcookieclicker.admin.modify   /shcookieclicker modify
-#   shcookieclicker.admin.reset    /shcookieclicker reset
-#   shcookieclicker.admin.import   /shcookieclicker import
-#   shcookieclicker.premium        Boutique VipElite.
-#   La sous-commande stats est ouverte à tous.
+#  Placeholders (nombres au format 1,234,567) :
+#    %cookieclicker_cookies%        cookies du joueur
+#    %cookieclicker_perclick%       cookies par clic
+#    %cookieclicker_clickerclicks%  clics sur le clicker
+#    %cookieclicker_place%          place au classement des cookies (N/A sans cookies)
 #
-# Têtes des joueurs (murs de statistiques, design de bloc REAL_PLAYER_HEAD) : le skin vient de SHSkins quand il est installé.
-# Sans lui, la tête n'a que l'UUID et le pseudo (skin par défaut) ; le plugin ne fait aucune requête à Mojang.
+#  Boutiques :
+#    ameliorations, vipelite   materiau (icône), prix (premier achat), hausse (ajoutée au prix
+#                              à chaque achat), gain (cookies par clic gagnés par achat).
+#                              Clic : un achat ; shift-clic : dix achats d'un coup (ou autant
+#                              que les cookies le permettent).
+#    designs                   s'achètent une fois, puis se sélectionnent (clic gauche) ou se
+#                              retirent (clic droit sur le design sélectionné).
+#      blocs    bloc vu à la place du clicker. TETE_JOUEUR : la tête du joueur (skin de
+#               SHSkins) ; PLAYER_HEAD avec texture : une tête à texture.
+#      effets   animation (SPIRALE, ANNEAUX, ONDE, ETOILE, TOURBILLON), particule,
+#               particule-secondaire (TOURBILLON), couleur '#RRGGBB' (poussière colorée à la
+#               place de la particule). Effet vu du seul joueur, au plus un à la fois.
+#      fonds    vitre qui entoure les menus (le noir est le fond par défaut).
+#    Le numéro d'un article est sa clé dans la base : ne pas renuméroter.
 #
-# Boutiques (default_shop, premium_shop, block_design_shop, hit_particle_design_shop, menu_design_shop) :
-#   item_type          matériau de l'icône (REAL_PLAYER_HEAD : tête du joueur ; PLAYER_HEAD avec skull_texture : tête à texture)
-#   add_clicks         cookies par clic gagnés à chaque achat (améliorations)
-#   base_price         prix du premier achat
-#   price_step         hausse du prix à chaque achat : prix = base_price + achats × price_step (améliorations)
-#   display_name       nom du design (block_type : bloc posé à la place du clicker, ou vitre du menu)
-#   particle_type, second_particle_type, colored_dust, color, animation_type : effet de coup (SPIRAL, CIRCLE_RINGS,
-#                      EXPLOSION_WAVE, STAR_BURST, MAGICAL_WHIRLWIND)
-#   Les améliorations se rachètent sans limite ; un design s'achète une fois, puis se sélectionne gratuitement.
-#
-# Sons : « type » est une clé de son (entity.item.pickup, minecraft:entity.item.pickup, ou la clé d'un son d'un pack
-# de ressources). Les anciens noms (ENTITY_ITEM_PICKUP) sont acceptés. Un nom inconnu est signalé dans la console au
-# chargement et le son reste muet.
-# ======================================================================== #
+#  Sons : clé de son (entity.item.pickup, minecraft:entity.item.pickup ou la clé d'un son
+#  d'un pack de ressources). Vide : pas de son. Un son inconnu est signalé au chargement.
+# ============================================================================
 
-# Base de données : un serveur seul : SQLite (cookieclicker.db), ou MySQL avec mysql.yml ; avec SHNetwork, voir la section "reseau" en bas du fichier
-MySQL: false
+base-de-donnees:
+  # sqlite : fichier cookieclicker.db du dossier du plugin ; mysql : la base ci-dessous.
+  # Avec SHNetwork, voir la section reseau.
+  type: sqlite
+  mysql:
+    hote: localhost
+    port: 3306
+    nom: CookieClicker
+    utilisateur: root
+    mot-de-passe: CHANGE_ME
+  # Écriture des progressions modifiées, en secondes. Un joueur est aussi écrit à son départ,
+  # et tout le monde à l'arrêt du serveur.
+  sauvegarde-secondes: 60
 
-# Sauvegarde des joueurs modifiés, en minutes (un joueur est aussi sauvegardé à son départ)
-Cache synchronization: 10
+clics:
+  # Clics par seconde permis. Chaque clic remplit un seau qui se vide de ce nombre par seconde :
+  # quand il déborde, les clics ne rapportent plus rien jusqu'à ce que le joueur ralentisse.
+  max-par-seconde: 12
+  # Un joueur qui n'a pas changé de bloc depuis ce délai ne gagne plus rien (anti-AFK), en
+  # secondes. Fermer un menu du clicker compte comme un mouvement. 0 : désactivé.
+  anti-afk-secondes: 15
 
-# Hologrammes d'aide au-dessus des clickers (textes : CLICKER_HOLOGRAM dans messages.yml)
-Clicker holograms: false
+cookie-dore:
+  # Un clic sur « chance » lance le cookie doré.
+  chance: 5000
+  duree-secondes: 60
+  # Les clics rapportent les cookies par clic multipliés par ce nombre.
+  multiplicateur: 2
 
-# Sons du plugin (réglages dans la section sounds)
-Sounds: true
+explosion:
+  # Un clic sur « chance » lance une explosion de cookies.
+  chance: 2500
+  cookies: 20
+  # Les cookies non ramassés disparaissent après ce délai.
+  duree-secondes: 30
+  # Un cookie ramassé rapporte les cookies par clic multipliés par ce nombre.
+  multiplicateur: 10
 
-# Durée du chronomètre de réinitialisation du classement par période, en minutes
-Resettimer: 60
+classement:
+  # Recalcul de %cookieclicker_place%, en secondes (seulement si des cookies ont changé).
+  rafraichissement-secondes: 30
 
-# Protections
-# Clics par seconde maximum, au-delà ils ne comptent plus
-Maximum CPS: 12
-# Un joueur immobile depuis ce délai ne peut plus cliquer (anti-AFK)
-AFK cooldown seconds: 15
+hologrammes:
+  # Texte au-dessus de chaque clicker, le même pour tous (lignes : hologramme-clicker dans messages.yml).
+  clicker: false
+  # Gain qui s'élève au-dessus d'un cookie ramassé pendant une explosion.
+  gains: true
 
-# Explosion de cookies : un clic a 2 chances sur « Cookie explosion range » de faire jaillir des cookies que seul le joueur voit
-Cookie amount: 20
-Explosion duration seconds: 30
-Cookies per cookie multiplier: 10
-Cookie explosion range: 5000
+affichage:
+  # Séparateur des milliers dans les textes du plugin (1 234 567). Les placeholders gardent la virgule.
+  separateur-milliers: ' '
 
-# Cookie doré : un clic a 2 chances sur « Golden cookie range » de multiplier les cookies par clic pendant un moment
-Golden duration seconds: 60
-Per click multiplier: 2
-Golden cookie range: 10000
+boutique:
+  ameliorations:
+    1:
+      materiau: GOLDEN_HOE
+      prix: 30
+      hausse: 230
+      gain: 2
+    2:
+      materiau: IRON_AXE
+      prix: 360
+      hausse: 460
+      gain: 4
+    3:
+      materiau: DIAMOND_PICKAXE
+      prix: 690
+      hausse: 690
+      gain: 6
+    4:
+      materiau: DIAMOND
+      prix: 920
+      hausse: 920
+      gain: 8
+    5:
+      materiau: GOLD_BLOCK
+      prix: 1250
+      hausse: 1150
+      gain: 10
+    6:
+      materiau: IRON_SHOVEL
+      prix: 1580
+      hausse: 1380
+      gain: 12
+    7:
+      materiau: ENDER_PEARL
+      prix: 1910
+      hausse: 1610
+      gain: 14
+  vipelite:
+    1:
+      materiau: BLAZE_ROD
+      prix: 2240
+      hausse: 1840
+      gain: 16
+    2:
+      materiau: IRON_INGOT
+      prix: 2570
+      hausse: 2070
+      gain: 18
+    3:
+      materiau: MUSIC_DISC_WARD
+      prix: 2900
+      hausse: 2300
+      gain: 20
+    4:
+      materiau: FIREWORK_STAR
+      prix: 3230
+      hausse: 2530
+      gain: 22
+    5:
+      materiau: ENDER_EYE
+      prix: 3560
+      hausse: 2760
+      gain: 24
+    6:
+      materiau: BLAZE_POWDER
+      prix: 3890
+      hausse: 2990
+      gain: 26
+    7:
+      materiau: NETHER_STAR
+      prix: 4220
+      hausse: 3220
+      gain: 28
 
-default_shop:
-  1:
-    item_type: GOLDEN_HOE
-    base_price: 30
-    price_step: 230
-    add_clicks: 2
-  2:
-    item_type: IRON_AXE
-    base_price: 360
-    price_step: 460
-    add_clicks: 4
-  3:
-    item_type: DIAMOND_PICKAXE
-    base_price: 690
-    price_step: 690
-    add_clicks: 6
-  4:
-    item_type: DIAMOND
-    base_price: 920
-    price_step: 920
-    add_clicks: 8
-  5:
-    item_type: GOLD_BLOCK
-    base_price: 1250
-    price_step: 1150
-    add_clicks: 10
-  6:
-    item_type: IRON_SHOVEL
-    base_price: 1580
-    price_step: 1380
-    add_clicks: 12
-  7:
-    item_type: ENDER_PEARL
-    base_price: 1910
-    price_step: 1610
-    add_clicks: 14
+designs:
+  blocs:
+    1:
+      nom: Prismarine
+      bloc: PRISMARINE
+      prix: 100000
+    2:
+      nom: Or brut
+      bloc: RAW_GOLD_BLOCK
+      prix: 200000
+    3:
+      nom: Bloc de miel
+      bloc: HONEY_BLOCK
+      prix: 300000
+    4:
+      nom: Oeuf de dragon
+      bloc: DRAGON_EGG
+      prix: 400000
+    5:
+      nom: Cactus
+      bloc: CACTUS
+      prix: 500000
+    6:
+      nom: Tête de cookie
+      bloc: PLAYER_HEAD
+      texture: http://textures.minecraft.net/texture/605ef8819fb6a92148249ff48c3914e92c273e7874523ff7930b9f5cc93ceaae
+      prix: 600000
+    7:
+      nom: Votre tête
+      bloc: TETE_JOUEUR
+      prix: 700000
+  effets:
+    1:
+      nom: Racines grandissantes
+      icone: WEEPING_VINES
+      animation: ETOILE
+      particule: COMPOSTER
+      prix: 100000
+    2:
+      nom: Ondes explosives
+      icone: TNT
+      animation: ONDE
+      particule: SMOKE
+      prix: 200000
+    3:
+      nom: Anneaux tournoyants
+      icone: ENDER_PEARL
+      animation: ANNEAUX
+      particule: CLOUD
+      couleur: '#471EBA'
+      prix: 300000
+    4:
+      nom: Spirales de vent
+      icone: WIND_CHARGE
+      animation: SPIRALE
+      particule: CLOUD
+      prix: 400000
+    5:
+      nom: Runes magiques
+      icone: ENCHANTED_BOOK
+      animation: TOURBILLON
+      particule: DRAGON_BREATH
+      particule-secondaire: ENCHANT
+      prix: 500000
+  fonds:
+    1:
+      nom: Verre transparent
+      vitre: GLASS_PANE
+      prix: 999999
+    3:
+      nom: Verre gris
+      vitre: GRAY_STAINED_GLASS_PANE
+      prix: 200000
+    4:
+      nom: Verre gris clair
+      vitre: LIGHT_GRAY_STAINED_GLASS_PANE
+      prix: 300000
+    5:
+      nom: Verre blanc
+      vitre: WHITE_STAINED_GLASS_PANE
+      prix: 400000
+    6:
+      nom: Verre bleu
+      vitre: BLUE_STAINED_GLASS_PANE
+      prix: 500000
+    7:
+      nom: Verre bleu clair
+      vitre: LIGHT_BLUE_STAINED_GLASS_PANE
+      prix: 600000
+    8:
+      nom: Verre cyan
+      vitre: CYAN_STAINED_GLASS_PANE
+      prix: 700000
+    9:
+      nom: Verre vert
+      vitre: GREEN_STAINED_GLASS_PANE
+      prix: 800000
+    10:
+      nom: Verre vert clair
+      vitre: LIME_STAINED_GLASS_PANE
+      prix: 900000
+    11:
+      nom: Verre marron
+      vitre: BROWN_STAINED_GLASS_PANE
+      prix: 1000000
+    12:
+      nom: Verre violet
+      vitre: PURPLE_STAINED_GLASS_PANE
+      prix: 1100000
+    13:
+      nom: Verre magenta
+      vitre: MAGENTA_STAINED_GLASS_PANE
+      prix: 1200000
+    14:
+      nom: Verre rose
+      vitre: PINK_STAINED_GLASS_PANE
+      prix: 1300000
+    15:
+      nom: Verre jaune
+      vitre: YELLOW_STAINED_GLASS_PANE
+      prix: 1400000
+    16:
+      nom: Verre orange
+      vitre: ORANGE_STAINED_GLASS_PANE
+      prix: 1500000
+    17:
+      nom: Verre rouge
+      vitre: RED_STAINED_GLASS_PANE
+      prix: 1600000
 
-premium_shop:
-  1:
-    item_type: BLAZE_ROD
-    base_price: 2240
-    price_step: 1840
-    add_clicks: 16
-  2:
-    item_type: IRON_INGOT
-    base_price: 2570
-    price_step: 2070
-    add_clicks: 18
-  3:
-    item_type: MUSIC_DISC_WARD
-    base_price: 2900
-    price_step: 2300
-    add_clicks: 20
-  4:
-    item_type: FIREWORK_STAR
-    base_price: 3230
-    price_step: 2530
-    add_clicks: 22
-  5:
-    item_type: ENDER_EYE
-    base_price: 3560
-    price_step: 2760
-    add_clicks: 24
-  6:
-    item_type: BLAZE_POWDER
-    base_price: 3890
-    price_step: 2990
-    add_clicks: 26
-  7:
-    item_type: NETHER_STAR
-    base_price: 4220
-    price_step: 3220
-    add_clicks: 28
+# Chaque son répond à une action du joueur.
+#   clic             un clic qui compte          clic-refuse      un clic refusé (trop rapide, immobile)
+#   ouverture        clic droit : le menu        navigation       un sous-menu, la page suivante
+#   retour           « Retour », page précédente vipelite         boutique VipElite ouverte
+#   vipelite-refuse  VipElite sans le grade      achat            achat réussi
+#   achat-refuse     pas assez de cookies        design-choisi    design sélectionné
+#   design-retire    design retiré               stats            /cookies
+#   cookie-dore      le cookie doré commence     explosion        une explosion de cookies commence
+sons:
+  actif: true
+  clic:
+    son: entity.item.pickup
+    volume: 1.0
+    hauteur: 1.0
+  clic-refuse:
+    son: block.anvil.break
+    volume: 1.0
+    hauteur: 1.0
+  ouverture:
+    son: ui.toast.in
+    volume: 1.0
+    hauteur: 1.0
+  navigation:
+    son: block.note_block.bass
+    volume: 1.0
+    hauteur: 1.0
+  retour:
+    son: entity.bat.takeoff
+    volume: 1.0
+    hauteur: 1.0
+  vipelite:
+    son: block.note_block.snare
+    volume: 1.0
+    hauteur: 1.0
+  vipelite-refuse:
+    son: block.anvil.break
+    volume: 1.0
+    hauteur: 1.0
+  achat:
+    son: entity.player.levelup
+    volume: 1.0
+    hauteur: 1.0
+  achat-refuse:
+    son: block.anvil.break
+    volume: 1.0
+    hauteur: 1.0
+  design-choisi:
+    son: block.note_block.pling
+    volume: 1.0
+    hauteur: 1.0
+  design-retire:
+    son: block.lava.pop
+    volume: 1.0
+    hauteur: 1.0
+  stats:
+    son: block.lava.pop
+    volume: 1.0
+    hauteur: 1.0
+  cookie-dore:
+    son: block.amethyst_block.hit
+    volume: 1.0
+    hauteur: 1.0
+  explosion:
+    son: block.end_portal.spawn
+    volume: 1.0
+    hauteur: 1.0
 
-block_design_shop:
-  1:
-    display_name: 'Prismarine'
-    item_type: PRISMARINE
-    block_type: PRISMARINE
-    skull_texture: ''
-    base_price: 100000
-  2:
-    display_name: 'Or brut'
-    item_type: RAW_GOLD_BLOCK
-    block_type: RAW_GOLD_BLOCK
-    skull_texture: ''
-    base_price: 200000
-  3:
-    display_name: 'Bloc de miel'
-    item_type: HONEY_BLOCK
-    block_type: HONEY_BLOCK
-    skull_texture: ''
-    base_price: 300000
-  4:
-    display_name: 'Oeuf de dragon'
-    item_type: DRAGON_EGG
-    block_type: DRAGON_EGG
-    skull_texture: ''
-    base_price: 400000
-  5:
-    display_name: 'Cactus'
-    item_type: CACTUS
-    block_type: CACTUS
-    skull_texture: ''
-    base_price: 500000
-  6:
-    display_name: 'Tête de cookie'
-    item_type: PLAYER_HEAD
-    block_type: PLAYER_HEAD
-    skull_texture: 'http://textures.minecraft.net/texture/605ef8819fb6a92148249ff48c3914e92c273e7874523ff7930b9f5cc93ceaae'
-    base_price: 600000
-  7:
-    display_name: 'Votre tête'
-    item_type: REAL_PLAYER_HEAD
-    block_type: REAL_PLAYER_HEAD
-    skull_texture: ''
-    base_price: 700000
-
-hit_particle_design_shop:
-  1:
-    display_name: 'Racines grandissantes'
-    item_type: WEEPING_VINES
-    colored_dust: false
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    particle_type: COMPOSTER
-    second_particle_type: COMPOSTER
-    animation_type: STAR_BURST
-    base_price: 100000
-  2:
-    display_name: 'Ondes explosives'
-    item_type: TNT
-    colored_dust: false
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    particle_type: SMOKE
-    second_particle_type: SMOKE
-    animation_type: EXPLOSION_WAVE
-    base_price: 200000
-  3:
-    display_name: 'Anneaux tournoyants'
-    item_type: ENDER_PEARL
-    colored_dust: true
-    color:
-      red: 71
-      green: 30
-      blue: 186
-    particle_type: CLOUD
-    second_particle_type: CLOUD
-    animation_type: CIRCLE_RINGS
-    base_price: 300000
-  4:
-    display_name: 'Spirales de vent'
-    item_type: WIND_CHARGE
-    colored_dust: false
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    particle_type: CLOUD
-    second_particle_type: CLOUD
-    animation_type: SPIRAL
-    base_price: 400000
-  5:
-    display_name: 'Runes magiques'
-    item_type: ENCHANTED_BOOK
-    colored_dust: false
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    particle_type: DRAGON_BREATH
-    second_particle_type: ENCHANT
-    animation_type: MAGICAL_WHIRLWIND
-    base_price: 500000
-
-# Le noir est le fond par défaut des menus (filler de menus.yml) : il n'est pas en vente
-menu_design_shop:
-  1:
-    display_name: 'Verre transparent'
-    item_type: GLASS
-    block_type: GLASS_PANE
-    base_price: 999999
-  3:
-    display_name: 'Verre gris'
-    item_type: GRAY_STAINED_GLASS
-    block_type: GRAY_STAINED_GLASS_PANE
-    base_price: 200000
-  4:
-    display_name: 'Verre gris clair'
-    item_type: LIGHT_GRAY_STAINED_GLASS
-    block_type: LIGHT_GRAY_STAINED_GLASS_PANE
-    base_price: 300000
-  5:
-    display_name: 'Verre blanc'
-    item_type: WHITE_STAINED_GLASS
-    block_type: WHITE_STAINED_GLASS_PANE
-    base_price: 400000
-  6:
-    display_name: 'Verre bleu'
-    item_type: BLUE_STAINED_GLASS
-    block_type: BLUE_STAINED_GLASS_PANE
-    base_price: 500000
-  7:
-    display_name: 'Verre bleu clair'
-    item_type: LIGHT_BLUE_STAINED_GLASS
-    block_type: LIGHT_BLUE_STAINED_GLASS_PANE
-    base_price: 600000
-  8:
-    display_name: 'Verre cyan'
-    item_type: CYAN_STAINED_GLASS
-    block_type: CYAN_STAINED_GLASS_PANE
-    base_price: 700000
-  9:
-    display_name: 'Verre vert'
-    item_type: GREEN_STAINED_GLASS
-    block_type: GREEN_STAINED_GLASS_PANE
-    base_price: 800000
-  10:
-    display_name: 'Verre vert clair'
-    item_type: LIME_STAINED_GLASS
-    block_type: LIME_STAINED_GLASS_PANE
-    base_price: 900000
-  11:
-    display_name: 'Verre marron'
-    item_type: BROWN_STAINED_GLASS
-    block_type: BROWN_STAINED_GLASS_PANE
-    base_price: 1000000
-  12:
-    display_name: 'Verre violet'
-    item_type: PURPLE_STAINED_GLASS
-    block_type: PURPLE_STAINED_GLASS_PANE
-    base_price: 1100000
-  13:
-    display_name: 'Verre magenta'
-    item_type: MAGENTA_STAINED_GLASS
-    block_type: MAGENTA_STAINED_GLASS_PANE
-    base_price: 1200000
-  14:
-    display_name: 'Verre rose'
-    item_type: PINK_STAINED_GLASS
-    block_type: PINK_STAINED_GLASS_PANE
-    base_price: 1300000
-  15:
-    display_name: 'Verre jaune'
-    item_type: YELLOW_STAINED_GLASS
-    block_type: YELLOW_STAINED_GLASS_PANE
-    base_price: 1400000
-  16:
-    display_name: 'Verre orange'
-    item_type: ORANGE_STAINED_GLASS
-    block_type: ORANGE_STAINED_GLASS_PANE
-    base_price: 1500000
-  17:
-    display_name: 'Verre rouge'
-    item_type: RED_STAINED_GLASS
-    block_type: RED_STAINED_GLASS_PANE
-    base_price: 1600000
-
-# Sons. Chaque son répond à une action du joueur (nom de la clé = action).
-#   click_allow          un clic sur le clicker compte
-#   click_deny           un clic refusé (trop rapide ou joueur immobile)
-#   open_inventory       clic droit sur le clicker : le menu s'ouvre
-#   shop, design, block_design, hit_particle_design, menu_design
-#                        ouverture d'un sous-menu depuis un bouton
-#   next                 page suivante
-#   back                 retour au menu précédent ou page précédente
-#   premium_allow        ouverture de la boutique VipElite
-#   premium_deny         boutique VipElite refusée (droit shcookieclicker.premium manquant)
-#   buy_allow            achat réussi ; buy_deny : pas assez de cookies
-#   select_design        design sélectionné ; remove_design : design retiré
-#   stats_info           /shcookieclicker stats
-#   golden_cookie        un cookie doré apparaît ; cookie_explosion : une explosion de cookies commence
-sounds:
-  click_allow:
-    type: 'entity.item.pickup'
-    volume: 1.0
-    pitch: 1.0
-  click_deny:
-    type: 'block.anvil.break'
-    volume: 1.0
-    pitch: 1.0
-  open_inventory:
-    type: 'ui.toast.in'
-    volume: 1.0
-    pitch: 1.0
-  shop:
-    type: 'block.note_block.bass'
-    volume: 1.0
-    pitch: 1.0
-  design:
-    type: 'block.note_block.bass'
-    volume: 1.0
-    pitch: 1.0
-  block_design:
-    type: 'block.note_block.bass'
-    volume: 1.0
-    pitch: 1.0
-  hit_particle_design:
-    type: 'block.note_block.bass'
-    volume: 1.0
-    pitch: 1.0
-  menu_design:
-    type: 'block.note_block.bass'
-    volume: 1.0
-    pitch: 1.0
-  next:
-    type: 'block.note_block.bass'
-    volume: 1.0
-    pitch: 1.0
-  back:
-    type: 'entity.bat.takeoff'
-    volume: 1.0
-    pitch: 1.0
-  premium_allow:
-    type: 'block.note_block.snare'
-    volume: 1.0
-    pitch: 1.0
-  premium_deny:
-    type: 'block.anvil.break'
-    volume: 1.0
-    pitch: 1.0
-  buy_allow:
-    type: 'entity.player.levelup'
-    volume: 1.0
-    pitch: 1.0
-  buy_deny:
-    type: 'block.anvil.break'
-    volume: 1.0
-    pitch: 1.0
-  select_design:
-    type: 'block.note_block.pling'
-    volume: 1.0
-    pitch: 1.0
-  remove_design:
-    type: 'block.lava.pop'
-    volume: 1.0
-    pitch: 1.0
-  stats_info:
-    type: 'block.lava.pop'
-    volume: 1.0
-    pitch: 1.0
-  golden_cookie:
-    type: 'block.amethyst_block.hit'
-    volume: 1.0
-    pitch: 1.0
-  cookie_explosion:
-    type: 'block.end_portal.spawn'
-    volume: 1.0
-    pitch: 1.0
-
-# Mode réseau. Actif seulement si SHNetwork est installé et 'actif' vaut true : la progression des joueurs
-# (cookies, cookies par clic, designs, achats) est alors dans la base partagée (tables cookieclicker_players et
-# cookieclicker_shops) au lieu du fichier SQLite du serveur. Le profil d'un joueur est relu en base à sa connexion,
-# une fois que l'autre serveur a fini de le sauvegarder, et sauvegardé à son départ. Les commandes modify et reset
-# visant un joueur d'un autre serveur lui sont transmises. La progression du fichier SQLite se copie une fois avec
-# /shcookieclicker import, sans rien écraser. Les clickers sont dans le monde 'spawn' : on ne clique que là.
-# Sans SHNetwork, rien de ceci n'est utilisé. Demande un redémarrage.
+# Mode réseau, actif seulement si SHNetwork est installé et « actif » vaut true : la progression
+# (cookies, cookies par clic, designs, achats) est dans la base partagée au lieu de la base
+# ci-dessus. Le profil d'un joueur est relu à sa connexion, une fois que l'autre serveur a fini
+# de l'écrire, et écrit à son départ. modify et reset visant un joueur d'un autre serveur lui
+# sont transmis. Sans SHNetwork, cette section n'est pas lue.
 reseau:
   actif: true
-  # Durée maximale, en secondes, pendant laquelle on attend que l'autre serveur ait fini de sauvegarder
-  # le joueur avant de lire son profil
+  # Attente maximale, en secondes, de la sauvegarde de l'autre serveur avant de lire le profil.
   attente-max-secondes: 10
   base-de-donnees:
     hote: 127.0.0.1

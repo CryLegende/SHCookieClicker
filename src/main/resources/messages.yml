@@ -1,107 +1,96 @@
-# ======================================================================== #
-# SHCookieClicker : textes envoyés aux joueurs et aux administrateurs.
-#
-# Couleurs avec &, couleurs hexadécimales avec #rrggbb. Jetons : %>% » · %<% « · %*% × · %|% ┃ · %->% ➜ · %!% ✔
-# Placeholders des textes joueur : %player% %cookies% %perclick% %clickerclicks% %place%.
-# Les textes des menus sont dans menus.yml.
-# Une clé absente de ce fichier prend le texte du jar.
-# ======================================================================== #
+# ============================================================================
+#  SHCookieClicker : messages du chat, barre d'action, titres et hologrammes
+# ============================================================================
+#  Codes couleur & et &#RRGGBB acceptés. Format SkyHand pour le chat : préfixe
+#  de la couleur du type, texte en &7, mots importants dans la couleur du type.
+#    &a succès · &e information · &6 avertissement · &c erreur
+#  Un message vide n'est pas envoyé. Une clé absente prend le texte du jar.
+#  Les textes des menus sont dans menus.yml.
+# ============================================================================
 
-# Préfixe ajouté devant certains messages : vide, chaque message porte son préfixe coloré
-PREFIX: ''
-NO_PERMISSION: '&7&l« &f&lSH &8&l» &fCommande inconnue, essayer autre chose.'
-ONLY_PLAYER: '&7&l« &c&lSH &8&l» &7Cette commande est &créservée aux joueurs&7.'
-PLAYER_NOT_FOUND: '&7&l« &c&lSH &8&l» &7Ce joueur n''a &cjamais joué &7au CookieClicker.'
-DATABASE_ERROR: '&7&l« &c&lSH &8&l» &7Le plugin n''est &cpas connecté &7à la base de données.'
-NOT_A_NUMBER: '&7&l« &c&lSH &8&l» &c%input% &7n''est pas un nombre.'
+commande:
+  inconnue: '&7&l« &f&lSH &8&l» &fCommande inconnue, essayer autre chose.'
+  # {commandes} = sous-commandes permises à l'expéditeur.
+  utilisation: '&7&l« &e&lSH &8&l» &7Utilisation : &e/shcookieclicker <{commandes}>'
+  # {syntaxe} = forme attendue de la sous-commande.
+  syntaxe: '&7&l« &e&lSH &8&l» &7Syntaxe : &e/shcookieclicker {syntaxe}'
+  reservee-joueur: '&7&l« &c&lSH &8&l» &7Cette commande est &créservée aux joueurs&7.'
+  joueur-inconnu: '&7&l« &c&lSH &8&l» &7Ce joueur n''a &cjamais joué &7au Cookie Clicker.'
+  pas-un-nombre: '&7&l« &c&lSH &8&l» &c{valeur} &7n''est pas un nombre.'
+  base-injoignable: '&7&l« &c&lSH &8&l» &7Le Cookie Clicker n''est &cpas connecté &7à sa base de données.'
 
-# Commande
-USAGE: '&7&l« &e&lSH &8&l» &7Utilisation : &e/shcookieclicker <%subcommands%>'
-SYNTAX: '&7&l« &e&lSH &8&l» &7Syntaxe : &e/shcookieclicker %syntax%'
-RELOAD_OK: '&7&l« &a&lSH &8&l» &7Configuration &arechargée&7.'
-RELOAD_RESTART: '&8• &7Les clés &6MySQL&7, &6mysql.yml &7et &6reseau &7demandent un redémarrage.'
-RELOAD_ERROR: '&7&l« &c&lSH &8&l» &7Rechargement annulé, &crien n''a été changé&7. Fichier &c%file%&7 : &c%error%'
+rechargement:
+  ok: '&7&l« &a&lSH &8&l» &7Configuration &arechargée&7.'
+  redemarrage: '&8• &7Les sections &6base-de-donnees &7et &6reseau &7demandent un redémarrage.'
+  # {fichier} = fichier illisible, {erreur} = détail.
+  erreur: '&7&l« &c&lSH &8&l» &7Rechargement annulé, &crien n''a changé&7. &c{fichier}&7 : &c{erreur}'
 
-LIST_HEADER: '&7&l« &e&lSH &8&l» &7Clickers :'
-LIST_ENTRY: '&8• &eClicker %number%'
-LIST_HOVER: '&7Cliquez pour vous téléporter'
-LIST_COUNT_ONE: '&8• &7Il y a &e1 &7clicker.'
-LIST_COUNT_MANY: '&8• &7Il y a &e%count% &7clickers.'
-MODIFY_BAD_TYPE: '&7&l« &c&lSH &8&l» &c%input% &7n''est pas un type : &fCOOKIES&7, &fPER_CLICK &7ou &fCLICKER_CLICKS&7.'
-MODIFY_DONE: '&7&l« &a&lSH &8&l» &7Valeur &e%type% &7de &e%player% &amodifiée&7.'
-RESET_DONE: '&7&l« &a&lSH &8&l» &7Progression de &e%player% &aréinitialisée&7.'
+clickers:
+  liste-titre: '&7&l« &e&lSH &8&l» &7Clickers :'
+  # {numero}, {monde}, {x}, {y}, {z}
+  liste-ligne: '&8• &eClicker {numero} &7({monde} {x} {y} {z})'
+  liste-survol: '&7Cliquez pour vous téléporter'
+  liste-vide: '&7&l« &e&lSH &8&l» &7Aucun clicker posé.'
+  pose: '&7&l« &e&lSH &8&l» &7Faites un &eclic droit &7sur le bloc qui deviendra le &eclicker {numero}&7.'
+  pose-annulee: '&7&l« &c&lSH &8&l» &7Pose du clicker &cannulée&7.'
+  deja: '&7&l« &c&lSH &8&l» &7Ce bloc est &cdéjà un clicker&7.'
+  ajoute: '&7&l« &a&lSH &8&l» &7Clicker &a{numero} &7posé.'
+  retire: '&7&l« &a&lSH &8&l» &7Clicker &a{numero} &7retiré.'
+  inconnu: '&7&l« &c&lSH &8&l» &7Le clicker &c{numero} &7n''existe pas.'
 
-# Pose des clickers, du chronomètre et des murs de statistiques
-SETUP_CLICK_BLOCK: '&7&l« &e&lSH &8&l» &7Faites un &eclic droit &7sur le &ebloc&7.'
-SETUP_CLICK_HEAD: '&7&l« &e&lSH &8&l» &7Faites un &eclic droit &7sur une &etête&7.'
-SETUP_CLICK_SIGN: '&7&l« &e&lSH &8&l» &7Faites un &eclic droit &7sur une &epancarte&7.'
-SETUP_NOT_A_HEAD: '&7&l« &c&lSH &8&l» &7Ce n''est &cpas une tête&7, faites un clic droit sur une tête.'
-SETUP_NOT_A_SIGN: '&7&l« &c&lSH &8&l» &7Ce n''est &cpas une pancarte&7, faites un clic droit sur une pancarte.'
-SETUP_CANCELLED: '&7&l« &c&lSH &8&l» &7Opération &cannulée&7.'
-CLICKER_ALREADY: '&7&l« &c&lSH &8&l» &7Ce bloc est &cdéjà un clicker&7.'
-CLICKER_SET: '&7&l« &a&lSH &8&l» &7Clicker &a%number% &7défini.'
-CLICKER_REMOVED: '&7&l« &a&lSH &8&l» &7Clicker &a%number% &7retiré.'
-CLICKER_UNKNOWN: '&7&l« &c&lSH &8&l» &7Ce clicker &cn''existe pas&7.'
-WALL_PLACE_SET: '&7&l« &a&lSH &8&l» &7Place &a%number% &7du mur de statistiques définie.'
-WALL_REMOVED: '&7&l« &a&lSH &8&l» &7Mur de statistiques &a%wall% &7retiré.'
-WALL_REMOVE_ERROR: '&7&l« &c&lSH &8&l» &7Impossible de retirer ce mur : &cdonnées illisibles&7.'
-RESETTIMER_SET: '&7&l« &a&lSH &8&l» &7Chronomètre de réinitialisation &adéfini &7ici.'
-RESETTIMER_REMOVED: '&7&l« &a&lSH &8&l» &7Chronomètre de réinitialisation &aretiré&7.'
-RESETTIMER_NOT_SET: '&7&l« &c&lSH &8&l» &7Le chronomètre &cn''est pas défini&7.'
+administration:
+  # {valeur} = type demandé.
+  type-inconnu: '&7&l« &c&lSH &8&l» &c{valeur} &7n''est pas un type : &fCOOKIES&7, &fPER_CLICK &7ou &fCLICKER_CLICKS&7.'
+  # {type}, {joueur}, {valeur} = nouvelle valeur.
+  modifie: '&7&l« &a&lSH &8&l» &e{type} &7de &e{joueur} &7: &a{valeur}&7.'
+  remis-a-zero: '&7&l« &a&lSH &8&l» &7Progression de &e{joueur} &aremise à zéro&7.'
 
-# Mode réseau (SHNetwork)
-NETWORK_FORWARDED: '&7&l« &e&lSH &8&l» &e%player% &7est sur le serveur &e%server%&7 : la commande lui a été &etransmise&7.'
-NETWORK_IMPORT_NO_NETWORK: '&7&l« &c&lSH &8&l» &7Cette commande demande le &cmode réseau &7(SHNetwork installé et base joignable).'
-NETWORK_IMPORT_NO_FILE: '&7&l« &c&lSH &8&l» &7Aucun fichier &ccookieclicker.db &7à importer.'
-NETWORK_IMPORT_STARTED: '&7&l« &e&lSH &8&l» &7Importation de la progression du fichier SQLite vers la base du réseau...'
-NETWORK_IMPORT_DONE: '&7&l« &a&lSH &8&l» &7Importation terminée : &a%imported% &7joueur(s) ajouté(s), &a%present% &7déjà présent(s).'
-NETWORK_IMPORT_FAILED: '&7&l« &c&lSH &8&l» &7L''importation a échoué, &cvérifiez la console&7.'
+reseau:
+  # {joueur}, {serveur}
+  transmis: '&7&l« &e&lSH &8&l» &e{joueur} &7est sur &e{serveur}&7 : la commande lui a été &etransmise&7.'
+  import-sans-reseau: '&7&l« &c&lSH &8&l» &7Cette commande demande le &cmode réseau &7(SHNetwork installé et base joignable).'
+  import-sans-fichier: '&7&l« &c&lSH &8&l» &7Aucun fichier &ccookieclicker.db &7à importer.'
+  import-debut: '&7&l« &e&lSH &8&l» &7Copie de la progression du fichier SQLite dans la base du réseau...'
+  # {ajoutes}, {presents} = joueurs copiés, joueurs déjà dans la base du réseau.
+  import-fin: '&7&l« &a&lSH &8&l» &7Copie terminée : &a{ajoutes} &7joueur(s) ajouté(s), &e{presents} &7déjà présent(s).'
+  import-echec: '&7&l« &c&lSH &8&l» &7La copie a &céchoué&7, voir la console.'
 
-# Clics (barre d'action)
-CLICK_MESSAGE: '&7Vos cookies &8&l» &6%cookies% ❂'
-COOKIE_COLLECT_MESSAGE: '&7Vos cookies &8&l» &6%cookies% ❂ &7+ &e%collectedcookies%'
-GOLDEN_COOKIE_COLOR:
-  PRIMARY: '&6'
-  SECONDARY: '&e'
-MAX_CPS: '&cVeuillez cliquer moins vite'
-AFK_MESSAGE: '&cANTI AFK &7Veuillez vous déplacer'
+# Barre d'action. {cookies} = cookies du joueur, {gain} = cookies du cookie ramassé.
+barre:
+  clic: '&7Vos cookies &8&l» &6{cookies} ❂'
+  ramassage: '&7Vos cookies &8&l» &6{cookies} ❂ &7+ &e{gain}'
+  trop-rapide: '&cVeuillez cliquer moins vite'
+  afk: '&cANTI AFK &7Veuillez vous déplacer'
 
-# /shcookieclicker stats
-PLAYER_STATS_INFO:
-  1: '&7-= &eStatistiques de &6%player% &7=-'
-  2: '&7Classement&8: &e%place%'
-  3: '&7Cookies&8: &e%cookies%'
-  4: '&7Par clic&8: &e%perclick%'
-  5: '&7Clics sur le clicker&8: &e%clickerclicks%'
-  6: '&7--------------------------------'
+# Pendant le cookie doré, la barre « clic » scintille de ces deux couleurs.
+cookie-dore:
+  titre: '&6&lCOOKIE DORÉ'
+  sous-titre: '&7Vos clics rapportent &6beaucoup plus &7!'
+  couleur: '&6'
+  reflet: '&e'
 
-# Événements (titres)
-GOLDEN_COOKIE_TITLE_HEADER: '&6&lCOOKIE DORÉ'
-GOLDEN_COOKIE_TITLE_FOOTER: '&7Vos clics rapportent &6beaucoup plus &7!'
-COOKIE_EXPLOSION_TITLE_HEADER: '&c&lEXPLOSION DE COOKIES'
-COOKIE_EXPLOSION_TITLE_FOOTER: '&7Ramassez-les avant qu''ils ne disparaissent !'
+explosion:
+  titre: '&c&lEXPLOSION DE COOKIES'
+  sous-titre: '&7Ramassez-les avant qu''ils ne disparaissent !'
 
-# Boutiques
-MESSAGE_NOT_BUYABLE: '&7&l« &c&lSH &8&l» &7Il vous manque &c%missing% ❂ &7pour cet achat.'
-PREMIUM_REQUIRED: '&7&l« &c&lSH &8&l» &7Cette boutique est réservée au grade &dVipElite&7.'
+boutique:
+  # {manque} = cookies manquants.
+  trop-cher: '&7&l« &c&lSH &8&l» &7Il vous manque &c{manque} ❂ &7pour cet achat.'
+  vipelite-requis: '&7&l« &c&lSH &8&l» &7Cette boutique est réservée au grade &dVipElite&7.'
 
-# Hologrammes
-CLICKER_HOLOGRAM:
-  1: '&8&l» &6CookieClicker &8&l«'
-  2: '&7(&fClic droit &7-> &aMenu&7)'
-  3: '&7(&fClic gauche &7-> &6Cookie !&7)'
-RESET_TIMER: '&7%*% &c%time% &7%*%'
-COLLECTED_COOKIE: '&7+ &6%collectedcookies% Cookies'
+# /cookies : {joueur}, {place}, {cookies}, {par-clic}, {clics}
+stats:
+  - '&7&l« &6&lCookie Clicker &8&l» &7de &6{joueur}'
+  - '&8• &7Classement &8&l» &e{place}'
+  - '&8• &7Cookies &8&l» &6{cookies} ❂'
+  - '&8• &7Cookies par clic &8&l» &e{par-clic} ❂'
+  - '&8• &7Clics sur le clicker &8&l» &e{clics}'
 
-# Murs de statistiques
-STATS_WALL:
-  RANK_PREFIX:
-    1: '&e&l#1'
-    2: '&b&l#2'
-    3: '&a&l#3'
-    DEFAULT: '&f&l#%number%'
-  SIGN_LINES:
-    1: '%*% CookieClicker %*%'
-    2: '%place%'
-    3: '%name%'
-    4: '%value% par clic'
+hologrammes:
+  # Au-dessus de chaque clicker (hologrammes.clicker dans config.yml).
+  clicker:
+    - '&8&l» &6Cookie Clicker &8&l«'
+    - '&7(&fClic droit &7-> &aMenu&7)'
+    - '&7(&fClic gauche &7-> &6Cookie !&7)'
+  # Au-dessus d'un cookie ramassé, {gain} = cookies gagnés.
+  gain: '&7+ &6{gain} cookies'

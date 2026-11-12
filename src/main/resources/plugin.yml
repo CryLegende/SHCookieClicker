@@ -1,25 +1,36 @@
 name: SHCookieClicker
 version: ${project.version}
-main: de.zillolp.cookieclicker.CookieClicker
+main: org.Cry_Legende.sHCookieClicker.SHCookieClicker
 api-version: '26.3'
-load: POSTWORLD
-description: "Version SkyHand de CookieClicker par ZilloLP (licence CookieClicker 1.0, voir LICENSE) : NMS remplacé par l'API Paper."
-authors: [ZilloLP, Cry_Legende]
-website: https://github.com/ZilloLP/CookieClicker
+author: Cry_Legende
+description: "Cookie Clicker de SkyHand : clicker du spawn, améliorations, designs, cookie doré, explosion de cookies et classement."
+softdepend:
+  - Multiverse-Core
+  - PlaceholderAPI
+  - SHNetwork
+  - SHSkins
+
 commands:
   shcookieclicker:
-    description: Statistiques et administration de CookieClicker
-    aliases: [cookieclicker]
-    usage: /shcookieclicker <stats|reload|list|set|remove|modify|reset|import>
-softdepend:
-  - "Multiverse-Core"
-  - "PlaceholderAPI"
-  - "SHNetwork"
-  - "SHSkins"
+    description: Administration du Cookie Clicker
+    aliases:
+      - cookieclicker
+    usage: /shcookieclicker
+  cookies:
+    description: Vos statistiques du Cookie Clicker, ou celles d'un autre joueur
+    aliases:
+      - cookie
+    usage: /cookies [joueur]
 
 permissions:
+  shcookieclicker.use:
+    description: /cookies, statistiques du Cookie Clicker
+    default: true
+  shcookieclicker.premium:
+    description: Boutique VipElite du Cookie Clicker
+    default: op
   shcookieclicker.admin:
-    description: Toute l'administration de CookieClicker
+    description: Toute l'administration du Cookie Clicker
     default: op
     children:
       shcookieclicker.admin.reload: true
@@ -30,26 +41,23 @@ permissions:
       shcookieclicker.admin.reset: true
       shcookieclicker.admin.import: true
   shcookieclicker.admin.reload:
-    description: Recharger la configuration
+    description: /shcookieclicker reload
     default: op
   shcookieclicker.admin.list:
-    description: Lister les clickers
+    description: /shcookieclicker list
     default: op
   shcookieclicker.admin.set:
-    description: Poser un clicker, le chronomètre de réinitialisation ou un mur de statistiques
+    description: /shcookieclicker set clicker
     default: op
   shcookieclicker.admin.remove:
-    description: Retirer un clicker, le chronomètre ou un mur de statistiques (casser le mur)
+    description: /shcookieclicker remove clicker
     default: op
   shcookieclicker.admin.modify:
-    description: Modifier les cookies, le gain par clic ou les clics d'un joueur
+    description: /shcookieclicker modify
     default: op
   shcookieclicker.admin.reset:
-    description: Réinitialiser la progression d'un joueur
+    description: /shcookieclicker reset
     default: op
   shcookieclicker.admin.import:
-    description: Reprendre la progression du fichier SQLite dans la base du réseau
-    default: op
-  shcookieclicker.premium:
-    description: Accéder à la boutique Premium
+    description: /shcookieclicker import (mode réseau)
     default: op

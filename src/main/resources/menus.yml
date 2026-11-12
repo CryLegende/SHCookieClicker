@@ -1,220 +1,218 @@
-# ======================================================================== #
-# SHCookieClicker : menus
+# ============================================================================
+#  SHCookieClicker : menus
+# ============================================================================
+#  Mise en page des menus de SkyHand : titre « &8&lMenu &8| Nom », cadre de
+#  vitres (le fond, remplacé par le design « fond » choisi par le joueur),
+#  vitres grises en accent, « Retour » en papier au centre de la dernière
+#  ligne, flèches de page de part et d'autre du retour.
 #
-# Mise en page des menus de SkyHand : titre « &8&lMenu &8| Nom », cadre de vitres noires (filler), vitres grises
-# en accent, « Retour » en papier au centre de la dernière ligne, flèches de page de part et d'autre du retour.
-# Le fond (filler) est remplacé par le design de menu que le joueur a acheté et sélectionné.
-#
-# Les cases se donnent par numéro, ou par liste et intervalles : « 10-16, 19-25 ».
-# Placeholders :
-#   tous les menus     %cookies% %perclick% %clickerclicks% %place%
-#   boutiques          %addclick% %price% %purchases% %missing% %displayname%
-#   titres paginés     %page% %pages%
-# Les sons sont dans config.yml (section sounds), les textes envoyés dans le tchat dans messages.yml.
-# Une clé absente de ce fichier prend la valeur du jar.
-# ======================================================================== #
+#  Cases : un numéro, ou une liste et des plages : « 10-16, 19-25 ».
+#  Placeholders :
+#    partout               {cookies} {par-clic} {clics} {place}
+#    améliorations         {gain} {prix} {prix-x10} {achats} {manque}
+#    designs               {nom} {prix} {manque}
+#    titres à pages        {page} {pages}
+#  Les sons sont dans config.yml, les messages du chat dans messages.yml.
+#  Une clé absente prend la valeur du jar.
+# ============================================================================
 
-filler:
-  material: BLACK_STAINED_GLASS_PANE
-  name: '&r'
-
+fond:
+  materiau: BLACK_STAINED_GLASS_PANE
 accent:
-  material: GRAY_STAINED_GLASS_PANE
-  name: '&r'
+  materiau: GRAY_STAINED_GLASS_PANE
 
-# Fiche du joueur, en haut de chaque menu
-stats:
-  material: COOKIE
-  name: '&6Vos cookies'
+# Fiche du joueur, en haut de chaque menu.
+fiche:
+  materiau: COOKIE
+  nom: '&6Vos cookies'
   lore:
     - ''
-    - '&8• &7Cookies &8&l» &e%cookies% ❂'
-    - '&8• &7Cookies par clic &8&l» &e%perclick% ❂'
-    - '&8• &7Clics sur le clicker &8&l» &e%clickerclicks%'
-    - '&8• &7Classement &8&l» &e%place%'
+    - '&8• &7Cookies &8&l» &e{cookies} ❂'
+    - '&8• &7Cookies par clic &8&l» &e{par-clic} ❂'
+    - '&8• &7Clics sur le clicker &8&l» &e{clics}'
+    - '&8• &7Classement &8&l» &e{place}'
 
-back:
-  material: PAPER
-  name: '&c⤾ Retour &7(Clic)'
+retour:
+  materiau: PAPER
+  nom: '&c⤾ Retour &7(Clic)'
 
-previous-page:
-  material: ARROW
-  name: '&fPage précédente'
+page-precedente:
+  materiau: ARROW
+  nom: '&fPage précédente'
   lore:
     - ''
-    - '&8• &7Cliquez ici pour voir'
-    - '&7la page précédente'
+    - '&7&o(( &f&oCliquez &7&opour voir la page précédente &7&o))'
 
-next-page:
-  material: ARROW
-  name: '&fPage suivante'
+page-suivante:
+  materiau: ARROW
+  nom: '&fPage suivante'
   lore:
     - ''
-    - '&8• &7Cliquez ici pour voir'
-    - '&7la page suivante'
+    - '&7&o(( &f&oCliquez &7&opour voir la page suivante &7&o))'
 
-# Clic droit sur le clicker
-home:
-  title: '&8&lMenu &8| CookieClicker'
-  size: 27
-  accent-slots: 10, 12, 14, 16
-  stats-slot: 11
-  shop:
-    slot: 13
-    material: EMERALD
-    name: '&aBoutique'
+# Clic droit sur le clicker.
+accueil:
+  titre: '&8&lMenu &8| Cookie Clicker'
+  lignes: 3
+  accents: 10, 12, 14, 16
+  fiche: 11
+  boutique:
+    case: 13
+    materiau: EMERALD
+    nom: '&aBoutique'
     lore:
       - ''
-      - '&8• &7Achetez des améliorations'
-      - '&7pour gagner plus de cookies'
-      - '&7à chaque clic'
+      - '&8&l« &7Des améliorations pour gagner'
+      - '&7plus de cookies à chaque clic. &8&l»'
       - ''
       - '&7&o(( &a&oCliquez &7&opour ouvrir la boutique &7&o))'
-  design:
-    slot: 15
-    material: PAINTING
-    name: '&bDesigns'
+  designs:
+    case: 15
+    materiau: PAINTING
+    nom: '&bDesigns'
     lore:
       - ''
-      - '&8• &7Changez l''apparence du clicker,'
-      - '&7de vos clics et des menus'
+      - '&8&l« &7L''apparence du clicker, de vos'
+      - '&7clics et des menus. &8&l»'
       - ''
       - '&7&o(( &b&oCliquez &7&opour choisir vos designs &7&o))'
 
-# Améliorations : chacune se rachète sans limite, le prix monte à chaque achat
-shop:
-  title: '&8&lMenu &8| Boutique'
-  size: 36
-  slots: 10-16
-  accent-slots: 3, 5
-  stats-slot: 4
-  back-slot: 31
-  premium:
-    slot: 33
-    material: NETHER_STAR
-    name: '&dBoutique VipElite'
+boutique:
+  titre: '&8&lMenu &8| Boutique'
+  lignes: 4
+  articles: 10-16
+  accents: 3, 5
+  fiche: 4
+  retour: 31
+  vipelite:
+    case: 33
+    materiau: NETHER_STAR
+    nom: '&dBoutique VipElite'
     lore:
       - ''
-      - '&8• &7Des améliorations plus puissantes,'
-      - '&7réservées au grade &dVipElite'
+      - '&8&l« &7Des améliorations plus puissantes,'
+      - '&7réservées au grade &dVipElite&7. &8&l»'
       - ''
       - '&7&o(( &d&oCliquez &7&opour ouvrir la boutique &7&o))'
-    lore-locked:
+    lore-verrouille:
       - ''
-      - '&8• &7Des améliorations plus puissantes,'
-      - '&7réservées au grade &dVipElite'
+      - '&8&l« &7Des améliorations plus puissantes,'
+      - '&7réservées au grade &dVipElite&7. &8&l»'
       - ''
       - '&7&o(( &c&oGrade VipElite requis &7&o))'
 
-premium-shop:
-  title: '&8&lMenu &8| Boutique VipElite'
-  size: 36
-  slots: 10-16
-  accent-slots: 3, 5
-  stats-slot: 4
-  back-slot: 31
+vipelite:
+  titre: '&8&lMenu &8| Boutique VipElite'
+  lignes: 4
+  articles: 10-16
+  accents: 3, 5
+  fiche: 4
+  retour: 31
 
-upgrade:
-  name: '&6+%addclick% ❂ &7par clic'
-  lore-buyable:
+# Une amélioration se rachète sans limite, son prix monte à chaque achat.
+amelioration:
+  nom: '&6+{gain} ❂ &7par clic'
+  lore-achetable:
     - ''
-    - '&8• &7Prix &8&l» &a%price% ❂'
-    - '&8• &7Achats &8&l» &f%purchases%'
+    - '&8• &7Prix &8&l» &a{prix} ❂'
+    - '&8• &7Prix de dix &8&l» &e{prix-x10} ❂'
+    - '&8• &7Achats &8&l» &f{achats}'
     - ''
-    - '&7&o(( &a&oCliquez &7&opour acheter &7&o))'
-  lore-locked:
+    - '&7&o(( &a&oClic &7&opour acheter &7&o))'
+    - '&7&o(( &a&oShift-clic &7&opour en acheter dix &7&o))'
+  lore-trop-cher:
     - ''
-    - '&8• &7Prix &8&l» &c%price% ❂'
-    - '&8• &7Achats &8&l» &f%purchases%'
+    - '&8• &7Prix &8&l» &c{prix} ❂'
+    - '&8• &7Prix de dix &8&l» &e{prix-x10} ❂'
+    - '&8• &7Achats &8&l» &f{achats}'
     - ''
-    - '&7&o(( &c&oIl vous manque &e%missing% ❂ &7&o))'
+    - '&7&o(( &c&oIl vous manque &e{manque} ❂ &7&o))'
 
-# Designs
-design:
-  title: '&8&lMenu &8| Designs'
-  size: 27
-  accent-slots: 10, 12, 14, 16
-  back-slot: 22
-  block:
-    slot: 11
-    material: PRISMARINE
-    name: '&bBloc du clicker'
+designs:
+  titre: '&8&lMenu &8| Designs'
+  lignes: 3
+  accents: 10, 12, 14, 16
+  retour: 22
+  blocs:
+    case: 11
+    materiau: PRISMARINE
+    nom: '&bBloc du clicker'
     lore:
       - ''
-      - '&8• &7Le bloc que vous voyez'
-      - '&7à la place du clicker'
+      - '&8&l« &7Le bloc que vous voyez à'
+      - '&7la place du clicker. &8&l»'
       - ''
       - '&7&o(( &b&oCliquez &7&opour choisir &7&o))'
-  hit-particle:
-    slot: 13
-    material: DRAGON_BREATH
-    name: '&dEffet de coup'
+  effets:
+    case: 13
+    materiau: DRAGON_BREATH
+    nom: '&dEffet de coup'
     lore:
       - ''
-      - '&8• &7L''animation qui accompagne'
-      - '&7vos clics sur le clicker'
+      - '&8&l« &7L''animation qui accompagne'
+      - '&7vos clics sur le clicker. &8&l»'
       - ''
       - '&7&o(( &d&oCliquez &7&opour choisir &7&o))'
-  menu:
-    slot: 15
-    material: PAINTING
-    name: '&eFond des menus'
+  fonds:
+    case: 15
+    materiau: PAINTING
+    nom: '&eFond des menus'
     lore:
       - ''
-      - '&8• &7La couleur des vitres'
-      - '&7qui entourent les menus'
+      - '&8&l« &7La couleur des vitres qui'
+      - '&7entourent ces menus. &8&l»'
       - ''
       - '&7&o(( &e&oCliquez &7&opour choisir &7&o))'
 
-block-design:
-  title: '&8&lMenu &8| Bloc du clicker'
-  size: 36
-  slots: 10-16
-  accent-slots: 3, 5
-  stats-slot: 4
-  back-slot: 31
+designs-blocs:
+  titre: '&8&lMenu &8| Bloc du clicker'
+  lignes: 4
+  articles: 10-16
+  accents: 3, 5
+  fiche: 4
+  retour: 31
 
-hit-particle-design:
-  title: '&8&lMenu &8| Effet de coup'
-  size: 36
-  slots: 11-15
-  accent-slots: 3, 5
-  stats-slot: 4
-  back-slot: 31
+designs-effets:
+  titre: '&8&lMenu &8| Effet de coup'
+  lignes: 4
+  articles: 11-15
+  accents: 3, 5
+  fiche: 4
+  retour: 31
 
-menu-design:
-  title: '&8&lMenu &8| Fond des menus &8(%page%/%pages%)'
-  size: 45
-  slots: 10-16, 19-25, 28-34
-  accent-slots: 3, 5
-  stats-slot: 4
-  back-slot: 40
-  previous-page-slot: 39
-  next-page-slot: 41
+designs-fonds:
+  titre: '&8&lMenu &8| Fond des menus &8({page}/{pages})'
+  lignes: 5
+  articles: 10-16, 19-25, 28-34
+  accents: 3, 5
+  fiche: 4
+  retour: 40
+  page-precedente: 39
+  page-suivante: 41
 
-# Les trois menus de design partagent ces textes
-design-item:
-  name-buyable: '&a%displayname%'
-  name-locked: '&c%displayname%'
-  name-owned: '&f%displayname%'
-  name-selected: '&b%displayname%'
-  lore-buyable:
+# Article des trois menus de designs, selon son état.
+design:
+  nom-achetable: '&a{nom}'
+  nom-trop-cher: '&c{nom}'
+  nom-possede: '&f{nom}'
+  nom-selectionne: '&b{nom}'
+  lore-achetable:
     - ''
-    - '&8• &7Prix &8&l» &a%price% ❂'
+    - '&8• &7Prix &8&l» &a{prix} ❂'
     - ''
     - '&7&o(( &a&oCliquez &7&opour acheter &7&o))'
-  lore-locked:
+  lore-trop-cher:
     - ''
-    - '&8• &7Prix &8&l» &c%price% ❂'
+    - '&8• &7Prix &8&l» &c{prix} ❂'
     - ''
-    - '&7&o(( &c&oIl vous manque &e%missing% ❂ &7&o))'
-  lore-owned:
+    - '&7&o(( &c&oIl vous manque &e{manque} ❂ &7&o))'
+  lore-possede:
     - ''
     - '&a✔ &7Acheté'
     - ''
     - '&7&o(( &e&oClic gauche &7&opour sélectionner &7&o))'
-  lore-selected:
+  lore-selectionne:
     - ''
     - '&b★ &7Sélectionné'
     - ''
-    - '&7&o(( &c&oClic droit &7&opour désactiver &7&o))'
+    - '&7&o(( &c&oClic droit &7&opour le retirer &7&o))'
